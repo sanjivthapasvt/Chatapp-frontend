@@ -44,7 +44,7 @@ function Auth() {
       const data = isLoginForm
         ? {
             identifier:
-              formData.identifier || formData.username || formData.email,
+            formData.identifier,
             password: formData.password,
           }
         : formData;
