@@ -5,7 +5,8 @@ import axios from "axios";
 function Chats(){
     const baseUrl = "http://localhost:8000/api";
     const navigate = useNavigate;
-    const isAuthenticated = !!localStorage.getItem("token");
+    //!! is for ts to know that the value will be on boolean
+    const isAuthenticated= !!localStorage.getItem("token");
     return(
         <div></div>
     )
