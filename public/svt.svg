@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <path fill="black" stroke="green" stroke-width="40" d="M256 32C114.6 32 0 125.1 0 240c0 49.6 24.5 95.2 65.5 130.5-9.1 30.5-31.8 57.7-55.8 77.9-5.6 4.7-2.2 14.3 5.5 14.3 66.1 0 116.5-31.9 140.2-51.2 31.8 9.6 66.5 15.5 100.6 15.5 141.4 0 256-93.1 256-208S397.4 32 256 32z"/>
+  <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="180" fill="green" font-family="FantasqueSansM Nerd Font Mono, monospace" font-weight="bold">
+    SvT
+  </text>
+</svg>
