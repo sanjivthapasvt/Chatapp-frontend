@@ -3,7 +3,7 @@ import {
   BrowserRouter as Router,
   Routes,
   Route,
-  Navigate,
+  // Navigate,
 } from "react-router-dom";
 import Chats from "./components/chats";
 import Auth from "./components/auth";
@@ -20,12 +20,12 @@ function App() {
         <Routes>
           <Route path="/" element={<Auth />} />
           <Route path="/home" element={<Home />} />
-          <Route path="/chat" element={<Chats />} />
+          <Route path="/chats" element={<Chats />} />
           <Route path="/profile" element={<Profile />} />
           <Route path="/notification" element={<Notification />} />
           <Route path="/room" element={<ChatRoom />} />
           <Route path="/friends" element={<Friends />} />
-          <Route path="*" element={<Navigate to="/home" replace />} />
+          {/* <Route path="*" element={<Navigate to="/home" replace />} /> */}
         </Routes>
       </div>
     </Router>
