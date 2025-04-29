@@ -27,7 +27,7 @@ function Chats() {
   const isAuthenticated = !!localStorage.getItem("token");
   useEffect(() => {
     if (!isAuthenticated) {
-      navigate("/");
+      navigate("/auth");
     }
   }, [navigate]);
 
@@ -84,11 +84,11 @@ function Chats() {
           <ul className="space-y-1">
             {chatList.map((chatroom: ChatRoom) => {
               const isActive =
-                location.pathname === `/chatrooms/${chatroom.id}`;
+                location.pathname === `/chatroom${chatroom.id}`;
               return (
                 <li key={chatroom.id}>
                   <Link
-                    to={`/chatrooms/${chatroom.id}`}
+                    to={`/chatroom/${chatroom.id}`}
                     className={`flex items-center gap-3 px-4 py-3 rounded-md transition-all duration-200
                             ${
                               isActive
@@ -127,7 +127,7 @@ function Chats() {
           </ul>
         )}
       </nav>
-      <div className="mt-auto border-t border-gray-800 py-3">
+      <div className="mt-auto border-t border-gray-800 py-4">
         <div className="flex justify-center">
           <button
             onClick={logout}
