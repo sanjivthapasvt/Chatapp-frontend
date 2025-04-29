@@ -100,15 +100,18 @@ function ChatRoom() {
     };
   }, []);
 
-  const sendMessage = () => {
-    if (socket && socket.readyState === WebSocket.OPEN && inputValue.trim()) {
-      socket.send(
-        JSON.stringify({
-          type: "chat_message",
-          message: inputValue,
-        })
-      );
-      setInputValue("");
+  const sendMessage = async () => {
+    try {
+        await axiosInstance.post(`${baseUrl}/chatrooms/${id}/messages/`, {content: inputValue})
+        if(socket && socket.readyState === WebSocket.OPEN){
+            socket.send(JSON.stringify({
+                type: "stop_typing",
+                username: currentUser
+            }))
+        }
+        setInputValue(""); 
+    }catch (error){
+        console.error("Something went wrong", error)
     }
   };
 
