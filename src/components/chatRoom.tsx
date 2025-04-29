@@ -1,5 +1,6 @@
 import axiosInstance from "../services/axiosInstance";
 import { useEffect, useState } from "react";
+import { FaUser } from "react-icons/fa";
 import { useParams } from "react-router-dom";
 
 interface User {
@@ -24,7 +25,10 @@ interface ChatInfo {
   is_group: boolean;
   creator: User;
   participants: User[];
+  group_image: string;
 }
+let typingTimeout: any;
+
 function ChatRoom() {
   const baseUrl = "http://127.0.0.1:8000/api";
   const WsBaseUrl = "ws://localhost:8000/ws";
@@ -36,7 +40,9 @@ function ChatRoom() {
   const [chatInfo, setChatInfo] = useState<ChatInfo | null>(null);
   const currentUser: number | null =
     parseInt(localStorage.getItem("user_id") ?? "", 10) || null;
-  const [typingUser, setTypingUser] = useState<string | null>(null);
+  const [typingUsers, setTypingUsers] = useState<Set<string>>(
+    new Set<string>()
+  );
 
   const fetchMessages = async () => {
     try {
@@ -73,13 +79,25 @@ function ChatRoom() {
       console.log("Web socket conneected");
     };
 
-    newSocket.onmessage = (event) => {
+    newSocket.onmessage = (event: MessageEvent) => {
       try {
         const data = JSON.parse(event.data);
 
         if (data.type === "new_message") {
           const newMessage: Message = data.message;
           setMessage((prevMessages) => [...prevMessages, newMessage]);
+        } else if (data.type === "typing") {
+          setTypingUsers((prev) => {
+            const updated = new Set(prev);
+            updated.add(data.username);
+            return new Set(updated);
+          });
+        } else if (data.type === "stop_typing") {
+          setTypingUsers((prev) => {
+            const updated = new Set(prev);
+            updated.delete(data.username);
+            return new Set(updated);
+          });
         }
       } catch (err) {
         console.error("Failed to parse incoming message", err);
@@ -100,18 +118,48 @@ function ChatRoom() {
     };
   }, []);
 
+  const handleInputChange = (e: any) => {
+    const value = e.target.value;
+    setInputValue(value);
+
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      socket.send(
+        JSON.stringify({
+          type: "typing",
+          username: currentUser,
+        })
+      );
+    }
+
+    clearTimeout(typingTimeout);
+    typingTimeout = setTimeout(() => {
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(
+          JSON.stringify({
+            type: "stop_typing",
+            username: currentUser,
+          })
+        );
+      }
+    }, 1500);
+  };
+
   const sendMessage = async () => {
     try {
-        await axiosInstance.post(`${baseUrl}/chatrooms/${id}/messages/`, {content: inputValue})
-        if(socket && socket.readyState === WebSocket.OPEN){
-            socket.send(JSON.stringify({
-                type: "stop_typing",
-                username: currentUser
-            }))
-        }
-        setInputValue(""); 
-    }catch (error){
-        console.error("Something went wrong", error)
+      await axiosInstance.post(`${baseUrl}/chatrooms/${id}/messages/`, {
+        content: inputValue,
+      });
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(
+          JSON.stringify({
+            type: "stop_typing",
+            username: currentUser,
+          })
+        );
+      }
+      setInputValue("");
+    } catch (error) {
+      console.error("Something went wrong", error);
     }
   };
 
@@ -120,8 +168,19 @@ function ChatRoom() {
       <div className="flex-1 flex flex-col bg-[#111827] text-white">
         {/* Chat Header */}
         <div className="flex items-center p-4 border-b border-gray-700">
-          <div className="w-10 h-10 bg-gray-500 rounded-full mr-3"></div>
-          <div>
+          <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
+            {chatInfo?.group_image ? (
+              <img
+                src={chatInfo.group_image}
+                alt="Group"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <FaUser className="text-gray-500 w-6 h-6" />
+            )}
+          </div>
+
+          <div className="pl-2">
             {!loading && chatInfo && (
               <div className="font-semibold">{chatInfo.room_name}</div>
             )}
@@ -157,6 +216,12 @@ function ChatRoom() {
             ))}
           </div>
         </div>
+        {typingUsers.size > 0 && (
+          <div className="typing-indicator">
+            {[...typingUsers].join(", ")}{" "}
+            {typingUsers.size === 1 ? "is" : "are"} typing...
+          </div>
+        )}
 
         {/* Chat Input */}
         <div className="p-4 border-t border-gray-800 flex items-center">
@@ -164,7 +229,7 @@ function ChatRoom() {
             type="text"
             placeholder="Send a message ..."
             value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
+            onChange={handleInputChange}
             className="flex-1 p-2 rounded-l bg-[#2A2A40] text-white placeholder-gray-400"
           />
           <button
