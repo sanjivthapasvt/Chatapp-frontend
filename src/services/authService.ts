@@ -24,7 +24,7 @@ export const handleLogout = async (navigate: NavigateFunction) => {
     localStorage.removeItem("user_id");
 
     toast.success("Successfully logged out!");
-    navigate("/auth");
+    navigate("/");
   } catch (error) {
     console.error(error);
     localStorage.removeItem("token");
@@ -32,6 +32,6 @@ export const handleLogout = async (navigate: NavigateFunction) => {
     localStorage.removeItem("user_id");
 
     toast.error("Logged out");
-    navigate("/auth");
+    navigate("/");
   }
 };
