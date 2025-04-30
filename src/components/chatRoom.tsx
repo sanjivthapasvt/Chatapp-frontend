@@ -31,8 +31,8 @@ interface ChatInfo {
 let typingTimeout: any;
 
 function ChatRoom() {
-  const baseUrl = "http://127.0.0.1:8000/api";
-  const WsBaseUrl = "ws://localhost:8000/ws";
+  const baseUrl = import.meta.env.VITE_BASE_URL
+  const WsBaseUrl = import.meta.env.VITE_WS_URL;
   const [socket, setSocket] = useState<WebSocket | null>(null);
   const [inputValue, setInputValue] = useState("");
   const { id } = useParams();

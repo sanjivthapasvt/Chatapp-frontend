@@ -1,9 +1,7 @@
-// services/authService.ts
-
 import axios from "axios";
 import { toast } from "react-toastify";
 import { NavigateFunction } from "react-router-dom";
-const baseUrl = "http://localhost:8000";
+const baseUrl = import.meta.env.VITE_BASE_URL;
 
 export const handleLogout = async (navigate: NavigateFunction) => {
   try {

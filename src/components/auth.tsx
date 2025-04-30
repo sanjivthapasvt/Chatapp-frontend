@@ -12,7 +12,7 @@ interface DecodedToken {
 }
 
 function Auth() {
-  const baseUrl = "http://localhost:8000/api";
+  const baseUrl = import.meta.env.VITE_BASE_URL;
   const [isLoginForm, setIsLoginForm] = useState(true);
   const [formData, setFormData] = useState({
     //identfier because my backend expects either username or password
@@ -43,8 +43,7 @@ function Auth() {
       const url = isLoginForm ? `${baseUrl}/login/` : `${baseUrl}/register/`;
       const data = isLoginForm
         ? {
-            identifier:
-            formData.identifier,
+            identifier: formData.identifier,
             password: formData.password,
           }
         : formData;

@@ -17,7 +17,7 @@ interface ChatRoom {
 }
 
 function Chats() {
-  const baseUrl = "http://localhost:8000/api";
+  const baseUrl = import.meta.env.VITE_BASE_URL;
   const [chatList, setChatList] = useState<ChatRoom[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
