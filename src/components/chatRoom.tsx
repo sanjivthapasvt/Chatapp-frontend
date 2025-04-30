@@ -1,43 +1,21 @@
 import { jwtDecode } from "jwt-decode";
 import axiosInstance from "../services/axiosInstance";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FaUser } from "react-icons/fa";
 import { useParams } from "react-router-dom";
+import { Message, ChatInfo} from "../services/interface"
 
-interface User {
-  id: number;
-  user_id: string;
-  profile_pic: string;
-}
 
-interface Message {
-  id: number;
-  room: number;
-  sender: User;
-  content: string;
-  timestamp: string;
-  image: string;
-  read_statuses: User[];
-}
-
-interface ChatInfo {
-  id: number;
-  room_name: string;
-  is_group: boolean;
-  creator: User;
-  participants: User[];
-  group_image: string;
-}
 let typingTimeout: any;
 
 function ChatRoom() {
-  const baseUrl = import.meta.env.VITE_BASE_URL
+  const baseUrl = import.meta.env.VITE_BASE_URL;
   const WsBaseUrl = import.meta.env.VITE_WS_URL;
   const [socket, setSocket] = useState<WebSocket | null>(null);
   const [inputValue, setInputValue] = useState("");
   const { id } = useParams();
-  let currentUsername: string;
   const [message, setMessage] = useState<Message[]>([]);
+  const socketRef = useRef<WebSocket | null>(null);
   const [loading, setLoading] = useState(true);
   const [chatInfo, setChatInfo] = useState<ChatInfo | null>(null);
   const currentUser: number | null =
@@ -45,6 +23,7 @@ function ChatRoom() {
   const [typingUsers, setTypingUsers] = useState<Set<string>>(
     new Set<string>()
   );
+  let currentUsername: string;
   const token = localStorage.getItem("token");
   if (token) {
     const decoded: any = jwtDecode(token);
@@ -81,14 +60,16 @@ function ChatRoom() {
   }, [id]);
 
   useEffect(() => {
-    const newSocket: WebSocket = new WebSocket(
-      `${WsBaseUrl}/chat/${id}/?token=${localStorage.getItem("token")}`
+    const ws: WebSocket = new WebSocket(
+      `${WsBaseUrl}/chat/${id}/?token=${token}`
     );
-    newSocket.onopen = () => {
+    socketRef.current = ws;
+
+    ws.onopen = () => {
       console.log("Web socket conneected");
     };
 
-    newSocket.onmessage = (event) => {
+    ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
 
@@ -119,17 +100,22 @@ function ChatRoom() {
       }
     };
 
-    newSocket.onclose = () => {
+    ws.onclose = () => {
       console.log("WebSocket connection closed");
     };
 
-    newSocket.onerror = (error) => {
+    ws.onerror = (error) => {
       console.error("WebSocket error:", error);
     };
 
-    setSocket(newSocket);
+    setSocket(ws);
+
     return () => {
-      newSocket.close();
+      if (ws.readyState === WebSocket.CONNECTING) {
+        ws.onopen = () => ws.close();
+      } else if (ws.readyState === WebSocket.OPEN) {
+        ws.close();
+      }
     };
   }, [id]);
 
@@ -170,7 +156,6 @@ function ChatRoom() {
             type: "stop_typing",
             username: currentUsername,
           })
-
         );
       }
       setInputValue("");
