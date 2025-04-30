@@ -1,3 +1,4 @@
+import { jwtDecode } from "jwt-decode";
 import axiosInstance from "../services/axiosInstance";
 import { useEffect, useState } from "react";
 import { FaUser } from "react-icons/fa";
@@ -5,7 +6,7 @@ import { useParams } from "react-router-dom";
 
 interface User {
   id: number;
-  username: string;
+  user_id: string;
   profile_pic: string;
 }
 
@@ -35,6 +36,7 @@ function ChatRoom() {
   const [socket, setSocket] = useState<WebSocket | null>(null);
   const [inputValue, setInputValue] = useState("");
   const { id } = useParams();
+  let currentUsername: string;
   const [message, setMessage] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const [chatInfo, setChatInfo] = useState<ChatInfo | null>(null);
@@ -43,14 +45,21 @@ function ChatRoom() {
   const [typingUsers, setTypingUsers] = useState<Set<string>>(
     new Set<string>()
   );
-
+  const token = localStorage.getItem("token");
+  if (token) {
+    const decoded: any = jwtDecode(token);
+    currentUsername = decoded.username;
+  }
   const fetchMessages = async () => {
     try {
       const response = await axiosInstance.get(
         `${baseUrl}/chatrooms/${id}/messages/`
       );
-      setMessage(response.data);
-      console.log(message);
+      const sortedMessages = [...response.data].sort(
+        (a, b) =>
+          new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
+      );
+      setMessage(sortedMessages);
     } catch (error) {
       console.error("Error fetching messages: ", error);
     }
@@ -79,24 +88,30 @@ function ChatRoom() {
       console.log("Web socket conneected");
     };
 
-    newSocket.onmessage = (event: MessageEvent) => {
+    newSocket.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
 
         if (data.type === "new_message") {
           const newMessage: Message = data.message;
-          setMessage((prevMessages) => [...prevMessages, newMessage]);
+          setMessage((prevMessages) =>
+            [...prevMessages, newMessage].sort(
+              (a, b) =>
+                new Date(a.timestamp).getTime() -
+                new Date(b.timestamp).getTime()
+            )
+          );
         } else if (data.type === "typing") {
           setTypingUsers((prev) => {
             const updated = new Set(prev);
             updated.add(data.username);
-            return new Set(updated);
+            return updated;
           });
         } else if (data.type === "stop_typing") {
           setTypingUsers((prev) => {
             const updated = new Set(prev);
             updated.delete(data.username);
-            return new Set(updated);
+            return updated;
           });
         }
       } catch (err) {
@@ -116,7 +131,7 @@ function ChatRoom() {
     return () => {
       newSocket.close();
     };
-  }, []);
+  }, [id]);
 
   const handleInputChange = (e: any) => {
     const value = e.target.value;
@@ -126,7 +141,7 @@ function ChatRoom() {
       socket.send(
         JSON.stringify({
           type: "typing",
-          username: currentUser,
+          username: currentUsername,
         })
       );
     }
@@ -137,7 +152,7 @@ function ChatRoom() {
         socket.send(
           JSON.stringify({
             type: "stop_typing",
-            username: currentUser,
+            username: currentUsername,
           })
         );
       }
@@ -153,8 +168,9 @@ function ChatRoom() {
         socket.send(
           JSON.stringify({
             type: "stop_typing",
-            username: currentUser,
+            username: currentUsername,
           })
+
         );
       }
       setInputValue("");
@@ -216,13 +232,15 @@ function ChatRoom() {
             ))}
           </div>
         </div>
-        {typingUsers.size > 0 && (
+        {[...typingUsers].filter((u) => u !== currentUsername).length > 0 && (
           <div className="typing-indicator">
-            {[...typingUsers].join(", ")}{" "}
-            {typingUsers.size === 1 ? "is" : "are"} typing...
+            {[...typingUsers].filter((u) => u !== currentUsername).join(", ")}{" "}
+            {[...typingUsers].filter((u) => u !== currentUsername).length === 1
+              ? "is"
+              : "are"}{" "}
+            typing...
           </div>
         )}
-
         {/* Chat Input */}
         <div className="p-4 border-t border-gray-800 flex items-center">
           <input
