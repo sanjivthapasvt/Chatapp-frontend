@@ -23,7 +23,6 @@ function Chats() {
   const navigate = useNavigate();
   const location = useLocation();
   const [searchTerm, setSearchTerm] = useState("");
-  //!! is for ts to know that the value will be on boolean
   const isAuthenticated = !!localStorage.getItem("token");
   useEffect(() => {
     if (!isAuthenticated) {
@@ -39,13 +38,16 @@ function Chats() {
           ordering: "timestamp",
         },
       });
-      setChatList(response.data);
+      const data = response.data;
+      setChatList(Array.isArray(data.results) ? data.results : []);
     } catch (error) {
       console.error("Error fetching chats", error);
+      setChatList([]);
     } finally {
       setLoading(false);
     }
   };
+  
 
   useEffect(() => {
     fetchChats();
