@@ -1,7 +1,12 @@
 export interface User {
   id: number;
   user_id: string;
+  username: string;
+  email: string;
+  first_name: string;
+  last_name: string;
   profile_pic: string;
+  friends: any[];
 }
 
 export interface Message {
@@ -13,7 +18,9 @@ export interface Message {
   image: string;
   read_statuses: User[];
 }
-
+export interface LastMessage {
+  content: string;
+}
 export interface ChatInfo {
   id: number;
   room_name: string;
@@ -21,4 +28,5 @@ export interface ChatInfo {
   creator: User;
   participants: User[];
   group_image: string;
+  last_message:LastMessage;
 }
