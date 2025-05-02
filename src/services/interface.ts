@@ -7,6 +7,7 @@ export interface User {
   last_name: string;
   profile_pic: string;
   friends: any[];
+  online_status:boolean;
 }
 
 export interface Message {
@@ -19,7 +20,7 @@ export interface Message {
   read_statuses: User[];
 }
 
-export interface ChatInfo {
+export interface ChatDetails {
   id: number;
   room_name: string;
   is_group: boolean;

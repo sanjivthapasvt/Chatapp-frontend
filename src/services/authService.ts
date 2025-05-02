@@ -1,9 +1,12 @@
 import axios from "axios";
-import { toast } from "react-toastify";
 import { NavigateFunction } from "react-router-dom";
+
 const baseUrl = import.meta.env.VITE_BASE_URL;
 
-export const handleLogout = async (navigate: NavigateFunction) => {
+export const handleLogout = async (
+  navigate: NavigateFunction,
+  resetState: () => void
+) => {
   try {
     const token = localStorage.getItem("token");
     if (token) {
@@ -17,19 +20,10 @@ export const handleLogout = async (navigate: NavigateFunction) => {
         }
       );
     }
-    localStorage.removeItem("token");
-    localStorage.removeItem("refresh_token");
-    localStorage.removeItem("user_id");
-
-    toast.success("Successfully logged out!");
-    navigate("/");
+    resetState();
+    navigate("/", { replace: true });
   } catch (error) {
-    console.error(error);
-    localStorage.removeItem("token");
-    localStorage.removeItem("refresh_token");
-    localStorage.removeItem("user_id");
-
-    toast.error("Logged out");
-    navigate("/");
+    resetState();
+    navigate("/", { replace: true });
   }
 };

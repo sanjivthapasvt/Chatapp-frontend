@@ -1,16 +1,20 @@
-//necessary libraries and components
 import { jwtDecode } from "jwt-decode";
 import axiosInstance from "../services/axiosInstance";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useContext, useRef, useState } from "react";
 import { FaUser } from "react-icons/fa";
 import { useParams } from "react-router-dom";
-import { Message, ChatInfo } from "../services/interface";
+import { Message } from "../services/interface";
 import InfiniteScroll from "react-infinite-scroll-component";
+import { ChatContext } from "../services/ChatContext";
+
 
 //global timeout variable for "typing" indicator
 let typingTimeout: any;
 
 function ChatRoom() {
+  const context = useContext(ChatContext);
+  if (!context) return null;
+
   // Base URLs from environment variables
   const baseUrl = import.meta.env.VITE_BASE_URL;
   const WsBaseUrl = import.meta.env.VITE_WS_URL;
@@ -24,7 +28,7 @@ function ChatRoom() {
   const [inputValue, setInputValue] = useState("");
   const [message, setMessage] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
-  const [chatInfo, setChatInfo] = useState<ChatInfo | null>(null);
+  const {chatInfo, setChatInfo } = context;
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [cursor, setCursor] = useState<string | null>(null);

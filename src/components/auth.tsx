@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { Bounce, ToastContainer, toast } from "react-toastify";
 import { jwtDecode } from "jwt-decode";
+import { ChatContext } from "../services/ChatContext";
 
 interface DecodedToken {
   user_id: number;
@@ -14,8 +15,8 @@ interface DecodedToken {
 function Auth() {
   const baseUrl = import.meta.env.VITE_BASE_URL;
   const [isLoginForm, setIsLoginForm] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
-    //identfier because my backend expects either username or password
     identifier: "",
     username: "",
     email: "",
@@ -24,6 +25,13 @@ function Auth() {
   });
 
   const navigate = useNavigate();
+  const context = useContext(ChatContext);
+
+  // Check if already logged in
+  if (localStorage.getItem("token")) {
+    navigate("/home");
+    return null;
+  }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -33,9 +41,11 @@ function Auth() {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setIsLoading(true);
 
     if (!isLoginForm && formData.password !== formData.confirm_password) {
       toast.error("Passwords do not match");
+      setIsLoading(false);
       return;
     }
 
@@ -56,14 +66,35 @@ function Auth() {
       if (accessToken && refreshToken) {
         localStorage.setItem("token", accessToken);
         localStorage.setItem("refresh_token", refreshToken);
+        
+        // Decode token to get user_id
         const decodedToken = jwtDecode<DecodedToken>(accessToken);
         const userId = decodedToken.user_id;
         localStorage.setItem("user_id", userId.toString());
+        
+        // If context exists, update authentication state
+        if (context && context.setUserInfo) {
+          // Fetch user info
+          try {
+            const userResponse = await axios.get(`${baseUrl}/profile/`, {
+              headers: {
+                Authorization: `Bearer ${accessToken}`
+              }
+            });
+            context.setUserInfo(userResponse.data);
+          } catch (error) {
+            console.error("Error fetching user info after login", error);
+          }
+        }
+        
+        // Navigate to home with success message
         navigate("/home", { state: { showLoginSuccess: true } });
       } else {
         toast.error("No token found in response");
+        setIsLoading(false);
       }
     } catch (error: any) {
+      setIsLoading(false);
       const err = error.response?.data;
       if (typeof err === "string") {
         toast.error(err);
@@ -184,9 +215,12 @@ function Auth() {
 
           <button
             type="submit"
-            className="w-full cursor-pointer px-4 py-3 mt-6 font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-800"
+            disabled={isLoading}
+            className={`w-full cursor-pointer px-4 py-3 mt-6 font-medium text-white bg-blue-600 rounded-xl hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-slate-800 ${
+              isLoading ? "opacity-70 cursor-not-allowed" : ""
+            }`}
           >
-            {isLoginForm ? "Sign In" : "Create Account"}
+            {isLoading ? "Logging in..." : isLoginForm ? "Sign In" : "Create Account"}
           </button>
         </form>
 

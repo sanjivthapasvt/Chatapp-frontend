@@ -1,20 +1,26 @@
-import { useState, useEffect } from "react";
+import { useState, useContext, useEffect, useCallback } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { LogOut, Settings } from "lucide-react";
 import { FaUserFriends, FaUser } from "react-icons/fa";
 import axiosInstance from "../services/axiosInstance";
 import { handleLogout } from "../services/authService";
-import { ChatInfo, User } from "../services/interface";
+import { ChatContext } from "../services/ChatContext";
+import { ChatDetails } from "../services/interface";
 
 function Chats() {
+  const context = useContext(ChatContext);
+  if (!context) return null;
+
   // Base API URL from environment variables
   const baseUrl = import.meta.env.VITE_BASE_URL;
   const WsBaseUrl = import.meta.env.VITE_WS_URL;
 
-  // State to store chatroom list and loading status
-  const [chatList, setChatList] = useState<ChatInfo[]>([]);
+  // State to store loading status
   const [loading, setLoading] = useState(true);
-  const [userInfo, setUserInfo] = useState<User | null>(null);
+  const [wsConnected, setWsConnected] = useState(false);
+  const [ws, setWs] = useState<WebSocket | null>(null);
+
+  const { userInfo, chatList, setUserInfo, setChatList } = context;
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -24,20 +30,16 @@ function Chats() {
   // Check if the user is authenticated
   const isAuthenticated = !!localStorage.getItem("token");
 
-  // Redirect to auth page if not authenticated
-  useEffect(() => {
-    if (!isAuthenticated) {
-      navigate("/auth");
-    }
-  }, [navigate]);
+  // Function to fetch chats info from API
+  const fetchChats = useCallback(async () => {
+    if (!isAuthenticated) return;
 
-  // Function to fetch chatrooms from API
-  const fetchChats = async () => {
     try {
+      setLoading(true);
       const response = await axiosInstance.get(`${baseUrl}/chatrooms/`, {
         params: {
           search: searchTerm,
-          ordering: "lastmessage", // Sort by latest message
+          ordering: "lastmessage",
         },
       });
       const data = response.data;
@@ -47,10 +49,12 @@ function Chats() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [baseUrl, searchTerm, isAuthenticated, setChatList]);
 
-  //function to fetch user info from API
-  const fetchUser = async () => {
+  // Function to fetch user info from API
+  const fetchUser = useCallback(async () => {
+    if (!isAuthenticated) return;
+
     try {
       const response = await axiosInstance.get(`${baseUrl}/profile/`);
       const data = response.data;
@@ -58,36 +62,47 @@ function Chats() {
     } catch (error) {
       console.error("Cannot fetch user info", error);
     }
-  };
+  }, [baseUrl, isAuthenticated, setUserInfo]);
 
+  // Fetch user info on mount and when authentication changes
   useEffect(() => {
-    fetchUser();
-  }, []);
+    if (isAuthenticated) {
+      fetchUser();
+    }
+  }, [fetchUser, isAuthenticated]);
 
-  // Fetch chatrooms when the route changes
+  // Fetch chatrooms when user info is available
   useEffect(() => {
-    fetchChats();
-  }, [location]);
+    if (userInfo) {
+      fetchChats();
+    }
+  }, [userInfo, fetchChats]);
 
-  //websocket to listen to sidechat changes like latest message and group created
+  // Setup WebSocket connection
   useEffect(() => {
+    if (!isAuthenticated || wsConnected) return;
+
     const token = localStorage.getItem("token");
-    const ws: WebSocket = new WebSocket(`${WsBaseUrl}/sidebar/?token=${token}`);
+    if (!token) return;
 
-    ws.onopen = () => {
+    const wsConnection = new WebSocket(`${WsBaseUrl}/sidebar/?token=${token}`);
+
+    wsConnection.onopen = () => {
       console.log("Sidebar Websocket Connected");
+      setWsConnected(true);
+      setWs(wsConnection);
     };
 
-    ws.onmessage = (event) => {
+    wsConnection.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
         console.log("WebSocket message received:", data);
 
         if (data.type === "group_created" && data.group) {
-          //to add the new group at the top
+          // Add the new group at the top
           setChatList((prev) => [data.group, ...prev]);
         } else if (data.type === "last_message_updated") {
-          //to refresh the entire chat list
+          // Refresh the entire chat list
           fetchChats();
         }
       } catch (error) {
@@ -95,23 +110,38 @@ function Chats() {
       }
     };
 
-    ws.onclose = () => {
+    wsConnection.onclose = () => {
       console.log("Sidebar WebSocket disconnected");
+      setWsConnected(false);
+      setWs(null);
     };
 
-    ws.onerror = (error) => {
+    wsConnection.onerror = (error) => {
       console.error("WebSocket error:", error);
+      setWsConnected(false);
+      setWs(null);
     };
 
     return () => {
-      ws.close();
+      if (wsConnection && wsConnection.readyState === WebSocket.OPEN) {
+        wsConnection.close();
+      }
     };
-  }, []);
+  }, [isAuthenticated, wsConnected, WsBaseUrl, fetchChats, setChatList]);
 
-  // Logout handler
-  const logout = () => {
-    handleLogout(navigate);
+  // Logout function
+  const logout = async () => {
+    if (context) {
+      // Close WebSocket connection before logout
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.close();
+      }
+      await handleLogout(navigate, context.logout);
+    }
   };
+
+  // If not authenticated, don't render the sidebar
+  if (!isAuthenticated) return null;
 
   return (
     <div
@@ -143,54 +173,61 @@ function Chats() {
           </div>
         ) : (
           <ul className="space-y-1">
-            {chatList.map((chatroom: ChatInfo) => {
-              // Highlight currently active chatroom
-              const isActive = location.pathname === `/chatroom${chatroom.id}`;
+            {chatList.length > 0 ? (
+              chatList.map((chatroom: ChatDetails) => {
+                // Highlight currently active chatroom
+                const isActive =
+                  location.pathname === `/chatroom/${chatroom.id}`;
 
-              return (
-                <li key={chatroom.id}>
-                  <Link
-                    to={`/chatroom/${chatroom.id}`}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-md transition-all duration-200
-                            ${
-                              isActive
-                                ? "bg-indigo-600 text-white"
-                                : "text-gray-300 hover:bg-gray-800 hover:text-white"
-                            }`}
-                  >
-                    {/* Chatroom image or fallback icon */}
-                    <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
-                      {chatroom.group_image ? (
-                        <img
-                          src={chatroom.group_image}
-                          alt="Group"
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <FaUser className="text-gray-500 w-6 h-6" />
+                return (
+                  <li key={chatroom.id}>
+                    <Link
+                      to={`/chatroom/${chatroom.id}`}
+                      className={`flex items-center gap-3 px-4 py-3 rounded-md transition-all duration-200
+                              ${
+                                isActive
+                                  ? "bg-indigo-600 text-white"
+                                  : "text-gray-300 hover:bg-gray-800 hover:text-white"
+                              }`}
+                    >
+                      {/* Chatroom image or fallback icon */}
+                      <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
+                        {chatroom.group_image ? (
+                          <img
+                            src={chatroom.group_image}
+                            alt="Group"
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <FaUser className="text-gray-500 w-6 h-6" />
+                        )}
+                      </div>
+
+                      {/* Chatroom name and last message */}
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium">
+                          {chatroom.room_name}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          {chatroom.last_message
+                            ? chatroom.last_message.content
+                            : "No message yet"}
+                        </span>
+                      </div>
+
+                      {/* Dot indicator for active chat */}
+                      {isActive && (
+                        <span className="ml-auto bg-indigo-500 h-2 w-2 rounded-full"></span>
                       )}
-                    </div>
-
-                    {/* Chatroom name and last message */}
-                    <div className="flex flex-col">
-                      <span className="text-sm font-medium">
-                        {chatroom.room_name}
-                      </span>
-                      <span className="text-xs text-gray-500">
-                        {chatroom.last_message
-                          ? chatroom.last_message.content
-                          : "No message yet"}
-                      </span>
-                    </div>
-
-                    {/* Dot indicator for active chat */}
-                    {isActive && (
-                      <span className="ml-auto bg-indigo-500 h-2 w-2 rounded-full"></span>
-                    )}
-                  </Link>
-                </li>
-              );
-            })}
+                    </Link>
+                  </li>
+                );
+              })
+            ) : (
+              <div className="text-center text-gray-500 py-4">
+                No chats found
+              </div>
+            )}
           </ul>
         )}
       </nav>
@@ -201,26 +238,40 @@ function Chats() {
           <div className="flex items-center gap-3">
             {userInfo ? (
               <>
-                <img
-                  src={userInfo.profile_pic}
-                  className="w-7 h-7 rounded-full object-cover"
-                  alt="Profile"
-                />
-                <span className="text-white text-sm font-semibold">
-                  {userInfo.username}
-                </span>
+                <div className="relative">
+                  <img
+                    src={userInfo.profile_pic}
+                    className="w-7 h-7 rounded-full object-cover"
+                    alt={userInfo.username.charAt(0).toUpperCase()}
+                  />
+                  {/* Online status indicator */}
+                  <div
+                    className={`absolute -bottom-1 -right-1 w-3 h-3 border-2 border-gray-900 rounded-full ${
+                      userInfo.online_status ? "bg-green-500" : "bg-gray-400"
+                    }`}
+                    title={userInfo.online_status ? "Online" : "Offline"}
+                  ></div>
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-white text-sm font-semibold">
+                    {userInfo.username}
+                  </span>
+                  <span className="text-xs text-gray-400">
+                    {userInfo.online_status ? "Online" : "Offline"}
+                  </span>
+                </div>
               </>
             ) : (
-              <FaUser className="text-gray-500 w-10 h-10" />
+              <FaUser className="text-gray-500 w-5 h-5" />
             )}
           </div>
           <div className="flex items-center gap-4">
-            <button className="text-gray-300 hover:text-white">
+            <Link to="/friends" className="text-gray-300 hover:text-white">
               <FaUserFriends size={18} />
-            </button>
-            <button className="text-gray-300 hover:text-white">
+            </Link>
+            <Link to="/profile" className="text-gray-300 hover:text-white">
               <Settings size={18} />
-            </button>
+            </Link>
             <button onClick={logout} className="text-gray-300 hover:text-white">
               <LogOut size={18} />
             </button>

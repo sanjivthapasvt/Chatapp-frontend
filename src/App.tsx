@@ -1,9 +1,11 @@
+import { useState, useEffect, ReactNode } from "react";
 import {
   BrowserRouter as Router,
   Routes,
   Route,
-  // Navigate,
   useLocation,
+  Navigate,
+  useNavigate,
 } from "react-router-dom";
 import Chats from "./components/sideBar";
 import Auth from "./components/auth";
@@ -12,14 +14,38 @@ import Home from "./components/home";
 import ChatRoom from "./components/chatRoom";
 import Notification from "./components/notification";
 import Profile from "./components/profile";
+import { ChatProvider } from "./services/ChatContext";
+
+type ProtectedRouteProps = {
+  children: ReactNode;
+};
+
+function ProtectedRoute({ children }: ProtectedRouteProps) {
+  const isAuthenticated = !!localStorage.getItem("token");
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigate("/auth");
+    }
+  }, [isAuthenticated, navigate]);
+
+  return isAuthenticated ? children : null;
+}
 
 function Layout() {
   const location = useLocation();
-  const showChats = !location.pathname.startsWith("/auth");
+  const [isAuthenticated, setIsAuthenticated] = useState(
+    !!localStorage.getItem("token")
+  );
 
-  // function NotFoundRedirect() {
-  //   return <Navigate to="/home" />;
-  // }
+  // update authentication state whenever the location changes
+  useEffect(() => {
+    setIsAuthenticated(!!localStorage.getItem("token"));
+  }, [location]);
+
+  // Only show sidebar when authenticated
+  const showChats = isAuthenticated && !location.pathname.startsWith("/auth");
 
   return (
     <div className="w-full h-full flex overflow-x-hidden">
@@ -27,12 +53,47 @@ function Layout() {
       <div className={`flex-grow ${showChats ? "ml-0 md:ml-64" : "w-full"}`}>
         <Routes>
           <Route path="/auth" element={<Auth />} />
-          <Route path="/home" element={<Home />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/notification" element={<Notification />} />
-          <Route path="/chatroom/:id" element={<ChatRoom />} />
-          <Route path="/friends" element={<Friends />} />
-          {/* <Route path="*" element={<NotFoundRedirect />} /> */}
+          <Route
+            path="/home"
+            element={
+              <ProtectedRoute>
+                <Home />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <ProtectedRoute>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/notification"
+            element={
+              <ProtectedRoute>
+                <Notification />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/chatroom/:id"
+            element={
+              <ProtectedRoute>
+                <ChatRoom />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/friends"
+            element={
+              <ProtectedRoute>
+                <Friends />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="*" element={<Navigate to="/home" />} />
         </Routes>
       </div>
     </div>
@@ -41,9 +102,11 @@ function Layout() {
 
 function App() {
   return (
-    <Router>
-      <Layout/>
-    </Router>
+    <ChatProvider>
+      <Router>
+        <Layout />
+      </Router>
+    </ChatProvider>
   );
 }
 
