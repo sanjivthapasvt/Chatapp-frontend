@@ -9,6 +9,7 @@ import { ChatInfo, User } from "../services/interface";
 function Chats() {
   // Base API URL from environment variables
   const baseUrl = import.meta.env.VITE_BASE_URL;
+  const WsBaseUrl = import.meta.env.VITE_WS_URL;
 
   // State to store chatroom list and loading status
   const [chatList, setChatList] = useState<ChatInfo[]>([]);
@@ -43,7 +44,6 @@ function Chats() {
       setChatList(Array.isArray(data.results) ? data.results : []);
     } catch (error) {
       console.error("Error fetching chats", error);
-      setChatList([]);
     } finally {
       setLoading(false);
     }
@@ -68,6 +68,45 @@ function Chats() {
   useEffect(() => {
     fetchChats();
   }, [location]);
+
+  //websocket to listen to sidechat changes like latest message and group created
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    const ws: WebSocket = new WebSocket(`${WsBaseUrl}/sidebar/?token=${token}`);
+
+    ws.onopen = () => {
+      console.log("Sidebar Websocket Connected");
+    };
+
+    ws.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        console.log("WebSocket message received:", data);
+
+        if (data.type === "group_created" && data.group) {
+          //to add the new group at the top
+          setChatList((prev) => [data.group, ...prev]);
+        } else if (data.type === "last_message_updated") {
+          //to refresh the entire chat list
+          fetchChats();
+        }
+      } catch (error) {
+        console.error("Error processing WebSocket message:", error);
+      }
+    };
+
+    ws.onclose = () => {
+      console.log("Sidebar WebSocket disconnected");
+    };
+
+    ws.onerror = (error) => {
+      console.error("WebSocket error:", error);
+    };
+
+    return () => {
+      ws.close();
+    };
+  }, []);
 
   // Logout handler
   const logout = () => {
@@ -158,38 +197,36 @@ function Chats() {
 
       {/* Footer buttons: friends, settings, logout */}
       <div className="mt-auto border-t border-gray-800 py-4 px-4">
-  <div className="flex items-center justify-between">
-    <div className="flex items-center gap-3">
-      {userInfo ? (
-        <>
-          <img
-            src={userInfo.profile_pic}
-            className="w-7 h-7 rounded-full object-cover"
-            alt="Profile"
-          />
-          <span className="text-white text-sm font-semibold">{userInfo.username}</span>
-        </>
-      ) : (
-        <FaUser className="text-gray-500 w-10 h-10" />
-      )}
-    </div>
-    <div className="flex items-center gap-4">
-      <button className="text-gray-300 hover:text-white">
-        <FaUserFriends size={18} />
-      </button>
-      <button className="text-gray-300 hover:text-white">
-        <Settings size={18} />
-      </button>
-      <button
-        onClick={logout}
-        className="text-gray-300 hover:text-white"
-      >
-        <LogOut size={18} />
-      </button>
-    </div>
-  </div>
-</div>
-
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            {userInfo ? (
+              <>
+                <img
+                  src={userInfo.profile_pic}
+                  className="w-7 h-7 rounded-full object-cover"
+                  alt="Profile"
+                />
+                <span className="text-white text-sm font-semibold">
+                  {userInfo.username}
+                </span>
+              </>
+            ) : (
+              <FaUser className="text-gray-500 w-10 h-10" />
+            )}
+          </div>
+          <div className="flex items-center gap-4">
+            <button className="text-gray-300 hover:text-white">
+              <FaUserFriends size={18} />
+            </button>
+            <button className="text-gray-300 hover:text-white">
+              <Settings size={18} />
+            </button>
+            <button onClick={logout} className="text-gray-300 hover:text-white">
+              <LogOut size={18} />
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

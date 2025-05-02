@@ -18,9 +18,7 @@ export interface Message {
   image: string;
   read_statuses: User[];
 }
-export interface LastMessage {
-  content: string;
-}
+
 export interface ChatInfo {
   id: number;
   room_name: string;
@@ -28,5 +26,8 @@ export interface ChatInfo {
   creator: User;
   participants: User[];
   group_image: string;
-  last_message:LastMessage;
+  last_message: {
+    content: string;
+    timestamp: string;
+  } | null;
 }

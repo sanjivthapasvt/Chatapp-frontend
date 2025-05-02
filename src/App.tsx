@@ -5,7 +5,7 @@ import {
   // Navigate,
   useLocation,
 } from "react-router-dom";
-import Chats from "./components/chats";
+import Chats from "./components/sideBar";
 import Auth from "./components/auth";
 import Friends from "./components/friends";
 import Home from "./components/home";

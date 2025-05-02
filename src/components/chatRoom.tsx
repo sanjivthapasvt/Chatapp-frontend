@@ -14,7 +14,7 @@ function ChatRoom() {
   // Base URLs from environment variables
   const baseUrl = import.meta.env.VITE_BASE_URL;
   const WsBaseUrl = import.meta.env.VITE_WS_URL;
-  
+
   // Extract the chat room ID from URL parameters
   const { id } = useParams();
 
