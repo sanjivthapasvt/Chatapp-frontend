@@ -21,9 +21,9 @@ export const handleLogout = async (
       );
     }
     resetState();
-    navigate("/", { replace: true });
+    navigate("/auth", { replace: true });
   } catch (error) {
     resetState();
-    navigate("/", { replace: true });
+    navigate("/auth", { replace: true });
   }
 };
