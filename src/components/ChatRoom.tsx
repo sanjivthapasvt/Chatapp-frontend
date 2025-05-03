@@ -287,22 +287,16 @@ function ChatRoom() {
                 <div>
                   {userInfo ? (
                     <>
-                      <div
-                        className={`absolute -bottom-1 -right-1 w-3 h-3 border-2 border-gray-900 rounded-full ${
-                          userInfo.online_status
-                            ? "bg-green-500"
-                            : "bg-gray-400"
-                        }`}
-                        title={userInfo.online_status ? "Online" : "Offline"}
-                      ></div>
                       <div className="flex flex-col">
-                        <span className="text-xs">
+                        <span
+                          className={`${
+                            userInfo.online_status ? "text-green-500" : "text-gray-400"}`}>
                           {userInfo.online_status ? "Online" : "Offline"}
                         </span>
                       </div>
                     </>
                   ) : (
-                    <FaUser className="text-gray-500 w-5 h-5" />
+                    <span className="flex flex-col text-gray-400">Offline</span>
                   )}
                 </div>
               )}

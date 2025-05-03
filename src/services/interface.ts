@@ -6,8 +6,9 @@ export interface User {
   first_name: string;
   last_name: string;
   profile_pic: string;
-  friends: any[];
+  friends: User[];
   online_status:boolean;
+  last_seen: string;
 }
 
 export interface Message {
@@ -31,4 +32,14 @@ export interface ChatDetails {
     content: string;
     timestamp: string;
   } | null;
+}
+
+export interface UserUpdate {
+  email: string;
+  first_name: string;
+  last_name: string;
+  profile_pic?: File | null;
+  old_password?: string;
+  new_password?: string;
+  confirm_password?: string;
 }
