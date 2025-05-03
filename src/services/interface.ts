@@ -2,6 +2,7 @@ export interface User {
   id: number;
   user_id: string;
   username: string;
+  bio: string;
   email: string;
   first_name: string;
   last_name: string;
@@ -34,12 +35,16 @@ export interface ChatDetails {
   } | null;
 }
 
-export interface UserUpdate {
+export interface UserProfileUpdate {
   email: string;
   first_name: string;
   last_name: string;
+  bio: string;
   profile_pic?: File | null;
-  old_password?: string;
-  new_password?: string;
-  confirm_password?: string;
+}
+
+export interface UserPasswordUpdate{
+  old_password: string;
+  new_password: string;
+  confirm_password: string;
 }

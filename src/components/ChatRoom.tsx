@@ -1,5 +1,5 @@
 import { jwtDecode } from "jwt-decode";
-import axiosInstance from "../services/axiosInstance";
+import axiosInstance from "../services/AxiosInstance";
 import { useEffect, useContext, useRef, useState } from "react";
 import { FaUser } from "react-icons/fa";
 import { useParams } from "react-router-dom";

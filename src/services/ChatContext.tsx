@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect, ReactNode } from "react";
-import axiosInstance from "./axiosInstance";
+import axiosInstance from "./AxiosInstance";
 import { ChatDetails, User } from "./interface";
 
 type ChatContextType = {

@@ -1,9 +1,9 @@
 import { useState, useContext, useEffect, useCallback } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { LogOut, Settings } from "lucide-react";
-import { FaUserFriends, FaUser } from "react-icons/fa";
-import axiosInstance from "../services/axiosInstance";
-import { handleLogout } from "../services/authService";
+import { FaUser } from "react-icons/fa";
+import axiosInstance from "../services/AxiosInstance";
+import { handleLogout } from "../services/AuthService";
 import { ChatContext } from "../services/ChatContext";
 import { ChatDetails } from "../services/interface";
 
@@ -232,7 +232,7 @@ function Chats() {
         )}
       </nav>
 
-      {/* Footer buttons: friends, settings, logout */}
+      {/* Footer buttons: settings, logout */}
       <div className="mt-auto border-t border-gray-800 py-4 px-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -266,9 +266,6 @@ function Chats() {
             )}
           </div>
           <div className="flex items-center gap-4">
-            <Link to="/friends" className="text-gray-300 hover:text-white">
-              <FaUserFriends size={18} />
-            </Link>
             <Link to="/profile" className="text-gray-300 hover:text-white">
               <Settings size={18} />
             </Link>
