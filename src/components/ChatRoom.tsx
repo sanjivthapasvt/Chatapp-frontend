@@ -7,7 +7,6 @@ import { Message } from "../services/interface";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { ChatContext } from "../services/ChatContext";
 
-
 //global timeout variable for "typing" indicator
 let typingTimeout: any;
 
@@ -28,7 +27,7 @@ function ChatRoom() {
   const [inputValue, setInputValue] = useState("");
   const [message, setMessage] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
-  const {chatInfo, setChatInfo } = context;
+  const { chatInfo, setChatInfo } = context;
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const [cursor, setCursor] = useState<string | null>(null);
@@ -37,6 +36,7 @@ function ChatRoom() {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   // Get current user info from localStorage
+  const { userInfo } = context;
   const currentUser: number | null =
     parseInt(localStorage.getItem("user_id") ?? "", 10) || null;
 
@@ -281,7 +281,31 @@ function ChatRoom() {
               <div className="font-semibold">{chatInfo.room_name}</div>
             )}
             <div className="text-green-400 text-sm">
-              {!chatInfo?.is_group && <div>Later for Online status</div>}
+              {!loading && chatInfo?.is_group ? (
+                <div></div>
+              ) : (
+                <div>
+                  {userInfo ? (
+                    <>
+                      <div
+                        className={`absolute -bottom-1 -right-1 w-3 h-3 border-2 border-gray-900 rounded-full ${
+                          userInfo.online_status
+                            ? "bg-green-500"
+                            : "bg-gray-400"
+                        }`}
+                        title={userInfo.online_status ? "Online" : "Offline"}
+                      ></div>
+                      <div className="flex flex-col">
+                        <span className="text-xs">
+                          {userInfo.online_status ? "Online" : "Offline"}
+                        </span>
+                      </div>
+                    </>
+                  ) : (
+                    <FaUser className="text-gray-500 w-5 h-5" />
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>

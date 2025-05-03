@@ -7,13 +7,13 @@ import {
   Navigate,
   useNavigate,
 } from "react-router-dom";
-import Chats from "./components/sideBar";
+import Chats from "./components/SideBar";
 import Auth from "./components/auth";
-import Friends from "./components/friends";
-import Home from "./components/home";
-import ChatRoom from "./components/chatRoom";
-import Notification from "./components/notification";
-import Profile from "./components/profile";
+import Friends from "./components/Friends";
+import Home from "./components/Home";
+import ChatRoom from "./components/ChatRoom";
+import Notification from "./components/Notification";
+import Profile from "./components/Profile";
 import { ChatProvider } from "./services/ChatContext";
 
 type ProtectedRouteProps = {
