@@ -10,6 +10,9 @@ export interface User {
   friends: User[];
   online_status:boolean;
   last_seen: string;
+  friendship_status: "friends" | "request_sent" | "request_received" | "none" | null;
+  outgoing_request_id: number | null;
+  incoming_request_id: number | null;
 }
 
 export interface Message {

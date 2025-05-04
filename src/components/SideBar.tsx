@@ -1,6 +1,6 @@
 import { useState, useContext, useEffect, useCallback } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { LogOut, Settings } from "lucide-react";
+import { LogOut, Settings, Users } from "lucide-react";
 import { FaUser } from "react-icons/fa";
 import axiosInstance from "../services/AxiosInstance";
 import { handleLogout } from "../services/AuthService";
@@ -266,6 +266,9 @@ function Chats() {
             )}
           </div>
           <div className="flex items-center gap-4">
+          <Link to="/friends" className="text-gray-300 hover:text-white">
+              <Users size={18} />
+            </Link>
             <Link to="/profile" className="text-gray-300 hover:text-white">
               <Settings size={18} />
             </Link>
