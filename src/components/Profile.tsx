@@ -5,8 +5,9 @@ import {
   UserProfileUpdate,
 } from "../services/interface";
 import axiosInstance from "../services/AxiosInstance";
-import { UserCheck, Mail, Users, Edit, Camera } from "lucide-react";
+import { UserCheck, Mail, Users, Edit, Camera, UserX } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
+import Swal from "sweetalert2";
 
 function Profile() {
   const baseUrl = import.meta.env.VITE_BASE_URL;
@@ -112,7 +113,6 @@ function Profile() {
         form.append(key, val as string);
       });
     }
-
     try {
       const response = await axiosInstance.patch(`${baseUrl}/profile/`, form);
       if (response.status === 200) {
@@ -135,227 +135,281 @@ function Profile() {
     );
   }
 
+  const removeFriend = async (id: number) => {
+    try {
+      const result = await Swal.fire({
+        title: "Do you want to remove the friend?",
+        text: "Are you sure?",
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonText: "Yes",
+        cancelButtonText: "No",
+      });
+      if (result.isConfirmed) {
+        await axiosInstance.post(`${baseUrl}/friends/${id}/remove_friend/`);
+        Swal.fire("Removed!", "The friend has been removed.", "success");
+        fetchFriends();
+      }
+    } catch (error) {
+      console.error(error);
+      Swal.fire(
+        "Error",
+        "Something went wrong while removing the friend.",
+        "error"
+      );
+    }
+  };
+
   return (
-    <div className="min-h-screen p-6 bg-gray-900 text-gray-100">
-      <div className="max-w-3xl mx-auto bg-gray-800 rounded-lg shadow-lg overflow-hidden">
-        {/* Profile Header */}
-        <div className="relative">
-          <div className="absolute inset-x-0 flex justify-center">
-            <div className="relative">
-              <div className="h-24 w-24 rounded-full border-4 border-gray-900 bg-gray-800 overflow-hidden">
-                {imagePreview ? (
-                  <img
-                    src={imagePreview}
-                    alt="Profile"
-                    className="h-full w-full object-cover"
-                  />
-                ) : (
-                  <UserCheck size={48} className="text-gray-500" />
-                )}
-              </div>
-              {isEditing && (
-                <label className="absolute bottom-0 right-0 p-1 bg-blue-500 rounded-full cursor-pointer">
-                  <Camera size={16} className="text-white" />
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleImageChange}
-                  />
-                </label>
+    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-gray-100">
+      <div className="relative h-34 bg-gradient-to-r from-purple-900 via-indigo-800 to-purple-900">
+        <div className="absolute -bottom-16 left-1/2 transform -translate-x-1/2">
+          <div className="relative">
+            <div className="h-32 w-32 rounded-full border-4 border-gray-800 bg-gray-700 overflow-hidden shadow-lg">
+              {imagePreview ? (
+                <img
+                  src={imagePreview}
+                  alt="Profile"
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <div className="h-full w-full flex items-center justify-center">
+                  <UserCheck size={64} className="text-gray-500" />
+                </div>
               )}
             </div>
+            {isEditing && (
+              <label className="absolute bottom-1 right-1 p-2 bg-blue-600 hover:bg-blue-700 rounded-full cursor-pointer shadow-lg">
+                <Camera size={16} className="text-white" />
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleImageChange}
+                />
+              </label>
+            )}
           </div>
         </div>
+      </div>
 
-        <div className="pt-16 px-6 pb-8">
-          {/* Edit Mode */}
-          {isEditing ? (
-            <form onSubmit={handleSubmit} className="mt-8 space-y-6">
-              {/* Profile Fields */}
-              {!showPasswordFields && (
-                <div className="space-y-4">
-                  {["first_name", "last_name", "bio", "email"].map((field) => (
+      <div className="container mx-auto px-4 pt-20 pb-16 max-w-5xl">
+        {isEditing ? (
+          <form onSubmit={handleSubmit} className="mt-8 space-y-6 bg-gray-800 p-8 rounded-xl border border-gray-700 shadow-xl">
+            <h2 className="text-2xl font-bold text-white text-center mb-6">Edit Profile</h2>
+            {!showPasswordFields && (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {["first_name", "last_name"].map((field) => (
+                  <div key={field}>
+                    <label className="block text-sm font-medium text-gray-300 capitalize mb-1">
+                      {field.replace("_", " ")}
+                    </label>
+                    <input
+                      name={field}
+                      type="text"
+                      value={
+                        formData[field as keyof UserProfileUpdate] as string
+                      }
+                      onChange={handleInputChange}
+                      className="w-full p-3 bg-gray-700 border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg text-gray-200"
+                    />
+                  </div>
+                ))}
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-300 mb-1">
+                    Email
+                  </label>
+                  <input
+                    name="email"
+                    type="email"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    className="w-full p-3 bg-gray-700 border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg text-gray-200"
+                  />
+                </div>
+                <div className="md:col-span-2">
+                  <label className="block text-sm font-medium text-gray-300 mb-1">
+                    Bio
+                  </label>
+                  <input
+                    name="bio"
+                    value={formData.bio}
+                    onChange={handleInputChange}
+                    className="w-full p-3 bg-gray-700 border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg text-gray-200"
+                  ></input>
+                </div>
+              </div>
+            )}
+
+            <button
+              type="button"
+              onClick={() => setShowPasswordFields((prev) => !prev)}
+              className="text-sm text-blue-400 hover:text-blue-300 font-medium flex items-center"
+            >
+              {showPasswordFields
+                ? "← Back to Edit Profile"
+                : "Change Password?"}
+            </button>
+
+            {showPasswordFields && (
+              <div className="mt-4 space-y-4 pt-4 border-t border-gray-700">
+                {["old_password", "new_password", "confirm_password"].map(
+                  (field) => (
                     <div key={field}>
-                      <label className="block text-sm text-gray-300 capitalize">
-                        {field.replace("_", " ")}
+                      <label className="block text-sm font-medium text-gray-300 capitalize mb-1">
+                        {field.replace(/_/g, " ")}
                       </label>
                       <input
+                        type="password"
                         name={field}
-                        type={field === "email" ? "email" : "text"}
-                        value={
-                          formData[field as keyof UserProfileUpdate] as string
+                        autoComplete={
+                          field === "old_password"
+                            ? "new-password"
+                            : undefined
                         }
-                        onChange={handleInputChange}
-                        className="w-full mt-1 p-2 bg-gray-700 rounded text-gray-200"
+                        value={
+                          passwordFormData[field as keyof UserPasswordUpdate]
+                        }
+                        onChange={handlePasswordChange}
+                        className="w-full p-3 bg-gray-700 border border-gray-600 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-lg text-gray-200"
                       />
                     </div>
-                  ))}
-                </div>
-              )}
+                  )
+                )}
+              </div>
+            )}
 
-              {/* Toggle Password Fields */}
+            <div className="flex justify-end space-x-3 pt-6">
               <button
                 type="button"
-                onClick={() => setShowPasswordFields((prev) => !prev)}
-                className="text-sm text-blue-400 hover:underline"
+                onClick={() => {
+                  setIsEditing(false);
+                  setShowPasswordFields(false);
+                  if (userData) {
+                    setFormData({
+                      first_name: userData.first_name || "",
+                      last_name: userData.last_name || "",
+                      bio: userData.bio || "",
+                      email: userData.email || "",
+                    });
+                    setPasswordFormData({
+                      old_password: "",
+                      new_password: "",
+                      confirm_password: "",
+                    });
+                    setSelectedImage(null);
+                    setImagePreview(userData.profile_pic || null);
+                  }
+                }}
+                className="px-5 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg font-medium shadow-md"
               >
-                {showPasswordFields
-                  ? "Back to Edit Profile"
-                  : "Change Password?"}
+                Cancel
               </button>
+              <button
+                type="submit"
+                className="px-5 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg font-medium shadow-md"
+              >
+                Save Changes
+              </button>
+            </div>
 
-              {showPasswordFields && (
-                <div className="mt-4 space-y-4 pt-4 border-t border-gray-700">
-                  {["old_password", "new_password", "confirm_password"].map(
-                    (field) => (
-                      <div key={field}>
-                        <label className="block text-sm text-gray-300">
-                          {field.replace("_", " ")}
-                        </label>
-                        <input
-                          type="password"
-                          name={field}
-                          autoComplete={
-                            field === "old_password"
-                              ? "new-password"
-                              : undefined
-                          }
-                          value={
-                            passwordFormData[field as keyof UserPasswordUpdate]
-                          }
-                          onChange={handlePasswordChange}
-                          className="w-full mt-1 p-2 bg-gray-700 rounded text-gray-200"
-                        />
-                      </div>
-                    )
-                  )}
-                </div>
-              )}
-
-              {/* Actions */}
-              <div className="flex justify-end space-x-3 pt-4">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsEditing(false);
-                    setShowPasswordFields(false);
-                    if (userData) {
-                      setFormData({
-                        first_name: userData.first_name || "",
-                        last_name: userData.last_name || "",
-                        bio: userData.bio || "",
-                        email: userData.email || "",
-                      });
-                      setPasswordFormData({
-                        old_password: "",
-                        new_password: "",
-                        confirm_password: "",
-                      });
-                      setSelectedImage(null);
-                      setImagePreview(userData.profile_pic || null);
-                    }
-                  }}
-                  className="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded"
-                >
-                  Save
-                </button>
+            {(error || success) && (
+              <div className="mt-4 p-3 rounded-lg text-center">
+                {error && <p className="text-red-500 font-medium">{error}</p>}
+                {success && <p className="text-green-500 font-medium">{success}</p>}
               </div>
-
-              {(error || success) && (
-                <div className="mt-4 space-y-2">
-                  {error && <p className="text-red-500">{error}</p>}
-                  {success && <p className="text-green-500">{success}</p>}
-                </div>
-              )}
-            </form>
-          ) : (
-            // Display Mode
-            <>
-              <div className="mt-16 text-center">
-                <h2 className="text-3xl font-semibold text-white">
-                  {userData?.first_name} {userData?.last_name}
-                </h2>
-                <p className="mt-1 flex items-center justify-center text-gray-400">
-                  <UserCheck className="mr-1" size={16} />@{userData?.username}
-                </p>
-                <p className="mt-1 flex items-center justify-center text-gray-400">
-                  <Mail className="mr-1" size={16} /> {userData?.email}
-                </p>
-                <p className="mt-3 text-gray-300 max-w-lg mx-auto">
-                  {userData?.bio || "No bio available."}
-                </p>
-                <button
-                  onClick={() => setIsEditing(true)}
-                  className="mt-4 inline-flex items-center px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-md text-white"
-                >
-                  <Edit size={16} className="mr-2" /> Edit Profile
-                </button>
+            )}
+          </form>
+        ) : (
+          <>
+            <div className="text-center">
+              <h2 className="text-4xl font-bold text-white">
+                {userData?.first_name} {userData?.last_name}
+              </h2>
+              <p className="mt-2 flex items-center justify-center text-gray-400">
+                <UserCheck className="mr-2" size={16} />@{userData?.username}
+              </p>
+              <p className="mt-2 flex items-center justify-center text-gray-400">
+                <Mail className="mr-2" size={16} /> {userData?.email}
+              </p>
+              <div className="mt-6 text-gray-300 max-w-2xl mx-auto bg-gray-800 bg-opacity-70 p-6 rounded-xl border border-gray-700 shadow-lg">
+                <p className="italic">{userData?.bio || "No bio available."}</p>
               </div>
+              <button
+                onClick={() => setIsEditing(true)}
+                className="mt-8 inline-flex items-center px-6 py-3 bg-purple-600 hover:bg-purple-700 rounded-lg text-white font-medium shadow-lg"
+              >
+                <Edit size={18} className="mr-2" /> Edit Profile
+              </button>
+            </div>
 
-              <section className="mt-12">
-                <h3 className="text-xl font-semibold text-white flex items-center">
-                  <Users className="mr-2 text-indigo-400" size={20} />
-                  Friends ({friends.length})
-                </h3>
-                <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                  {friends.length > 0 ? (
-                    friends.map((f) => (
-                      <div
-                        key={f.id}
-                        className="flex items-center p-4 bg-gray-800 rounded-lg hover:bg-gray-700 transition"
-                      >
-                        <div className="h-12 w-12 rounded-full bg-gray-700 overflow-hidden flex-shrink-0">
-                          {f.profile_pic ? (
-                            <img
-                              src={friendImage(f.profile_pic)}
-                              alt={f.username.charAt(0).toUpperCase()}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <span className="flex items-center justify-center h-full text-gray-400">
-                              {f.username.charAt(0).toUpperCase()}
-                            </span>
-                          )}
-                        </div>
-                        <div className="ml-4 flex flex-col space-y-1">
-                          <div className="flex items-center space-x-2">
-                            <h4 className="text-white font-semibold text-lg">
-                              {f.first_name} {f.last_name}
-                            </h4>
-                            <span
-                              className={`h-2.5 w-2.5 rounded-full ${
-                                f.online_status ? "bg-green-500" : "bg-gray-500"
-                              }`}
-                              title={f.online_status ? "Online" : "Offline"}
-                            ></span>
+            <section className="mt-16">
+              <h3 className="text-2xl font-bold text-white flex items-center border-b border-gray-700 pb-3">
+                <Users className="mr-2 text-indigo-400" size={24} />
+                Friends ({friends.length})
+              </h3>
+              <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {friends.length > 0 ? (
+                  friends.map((f) => (
+                    <div
+                      key={f.id}
+                      className="flex items-center p-4 bg-gray-800 rounded-xl hover:bg-gray-700 transition border border-gray-700 shadow-md"
+                    >
+                      <div className="h-16 w-16 rounded-full bg-gray-600 overflow-hidden flex-shrink-0 border border-gray-500">
+                        {f.profile_pic ? (
+                          <img
+                            src={friendImage(f.profile_pic)}
+                            alt={f.username.charAt(0).toUpperCase()}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="flex items-center justify-center h-full text-gray-300 font-bold text-xl">
+                            {f.username.charAt(0).toUpperCase()}
                           </div>
-                          <p className="text-gray-400 text-sm">@{f.username}</p>
-                          <p className="text-gray-400 text-xs italic">
-                            {f.online_status
-                              ? "Online"
-                              : `Last seen ${formatDistanceToNow(
-                                  new Date(f.last_seen),
-                                  { addSuffix: true }
-                                )}`}
-                          </p>
-                        </div>
+                        )}
                       </div>
-                    ))
-                  ) : (
-                    <p className="mt-4 text-gray-400">No friends found.</p>
-                  )}
-                </div>
-              </section>
-            </>
-          )}
-        </div>
+                      <div className="ml-4 flex flex-col space-y-1">
+                        <div className="flex items-center space-x-2">
+                          <h4 className="text-white font-semibold text-lg">
+                            {f.first_name} {f.last_name}
+                          </h4>
+                          <span
+                            className={`h-3 w-3 rounded-full ${
+                              f.online_status ? "bg-green-500" : "bg-gray-500"
+                            }`}
+                            title={f.online_status ? "Online" : "Offline"}
+                          ></span>
+                        </div>
+                        <p className="text-gray-400 text-sm">@{f.username}</p>
+                        <p className="text-gray-400 text-xs italic">
+                          {f.online_status
+                            ? "Online"
+                            : `Last seen ${formatDistanceToNow(
+                                new Date(f.last_seen),
+                                { addSuffix: true }
+                              )}`}
+                        </p>
+                        <button
+                          className="px-3 py-2 mt-1 text-sm bg-gray-600 hover:bg-red-700 text-white rounded-md flex items-center gap-1 transition-colors duration-200"
+                          onClick={() => removeFriend(f.id)}
+                        >
+                          <UserX size={16} />
+                          <span>Remove</span>
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="col-span-full p-8 text-center text-gray-400 bg-gray-800 bg-opacity-50 rounded-xl border border-gray-700">
+                    <Users size={48} className="mx-auto mb-4 text-gray-500" />
+                    <p className="text-lg">No friends found</p>
+                    <p className="text-sm mt-2">Connect with other users to add them to your friends list</p>
+                  </div>
+                )}
+              </div>
+            </section>
+          </>
+        )}
       </div>
     </div>
   );
