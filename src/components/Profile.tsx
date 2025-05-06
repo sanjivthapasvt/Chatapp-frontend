@@ -186,7 +186,7 @@ function Profile() {
                   accept="image/*"
                   className="hidden"
                   onChange={handleImageChange}
-                />
+                 />
               </label>
             )}
           </div>

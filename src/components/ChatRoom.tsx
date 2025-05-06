@@ -6,14 +6,12 @@ import { useParams } from "react-router-dom";
 import { Message } from "../services/interface";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { ChatContext } from "../services/ChatContext";
-
 //global timeout variable for "typing" indicator
 let typingTimeout: any;
 
 function ChatRoom() {
   const context = useContext(ChatContext);
   if (!context) return null;
-
   // Base URLs from environment variables
   const baseUrl = import.meta.env.VITE_BASE_URL;
   const WsBaseUrl = import.meta.env.VITE_WS_URL;
@@ -36,7 +34,6 @@ function ChatRoom() {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
 
   // Get current user info from localStorage
-  const { userInfo } = context;
   const currentUser: number | null =
     parseInt(localStorage.getItem("user_id") ?? "", 10) || null;
 
@@ -278,29 +275,45 @@ function ChatRoom() {
 
           <div className="pl-2">
             {!loading && chatInfo && (
-              <div className="font-semibold">{chatInfo.room_name}</div>
+              <>
+                <div className="font-semibold">{chatInfo.chat_name}</div>
+
+                {!chatInfo.is_group && currentUser && (
+                  <>
+                    {chatInfo.participants &&
+                      chatInfo.participants.length === 2 &&
+                      (() => {
+                        const otherUser = chatInfo.participants.find(
+                          (p) => p.id !== currentUser
+                        );
+
+                        return otherUser ? (
+                          <div className="text-sm">
+                            <span
+                              className={`h-3 w-3 rounded-full ${
+                                otherUser.online_status
+                                  ? "bg-green-500"
+                                  : "bg-gray-500"
+                              }`}
+                              title={
+                                otherUser.online_status ? "Online" : "Offline"
+                              }
+                            ></span>
+                            <p className="text-gray-400 text-sm">
+                              @{otherUser.id}
+                            </p>
+                            <p className="text-gray-400 text-xs">
+                              {otherUser.online_status
+                                ? "Online"
+                                : "Offline"}
+                            </p>
+                          </div>
+                        ) : null;
+                      })()}
+                  </>
+                )}
+              </>
             )}
-            <div className="text-green-400 text-sm">
-              {!loading && chatInfo?.is_group ? (
-                <div></div>
-              ) : (
-                <div>
-                  {userInfo ? (
-                    <>
-                      <div className="flex flex-col">
-                        <span
-                          className={`${
-                            userInfo.online_status ? "text-green-500" : "text-gray-400"}`}>
-                          {userInfo.online_status ? "Online" : "Offline"}
-                        </span>
-                      </div>
-                    </>
-                  ) : (
-                    <span className="flex flex-col text-gray-400">Offline</span>
-                  )}
-                </div>
-              )}
-            </div>
           </div>
         </div>
 

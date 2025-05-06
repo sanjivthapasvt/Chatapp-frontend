@@ -28,6 +28,7 @@ export interface Message {
 export interface ChatDetails {
   id: number;
   room_name: string;
+  chat_name: string;
   is_group: boolean;
   creator: User;
   participants: User[];

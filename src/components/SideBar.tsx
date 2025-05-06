@@ -206,7 +206,7 @@ function Chats() {
                       {/* Chatroom name and last message */}
                       <div className="flex flex-col">
                         <span className="text-sm font-medium">
-                          {chatroom.room_name}
+                          {chatroom.chat_name}
                         </span>
                         <span className="text-xs text-gray-500">
                           {chatroom.last_message
