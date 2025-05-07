@@ -261,7 +261,8 @@ function ChatRoom() {
       <div className="flex-1 flex flex-col bg-[#111827] text-white">
         {/* Chat Header */}
         <div className="flex items-center p-4 border-b border-gray-700">
-          <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-200 flex items-center justify-center">
+          {/* Avatar / Group Image */}
+          <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-800 flex items-center justify-center">
             {chatInfo?.group_image ? (
               <img
                 src={chatInfo.group_image}
@@ -269,14 +270,17 @@ function ChatRoom() {
                 className="w-full h-full object-cover"
               />
             ) : (
-              <FaUser className="text-gray-500 w-6 h-6" />
+              <FaUser className="text-gray-400 w-6 h-6" />
             )}
           </div>
 
-          <div className="pl-2">
+          {/* Chat Info */}
+          <div className="pl-4">
             {!loading && chatInfo && (
               <>
-                <div className="font-semibold">{chatInfo.chat_name}</div>
+                <div className="text-lg font-semibold text-white">
+                  {chatInfo.chat_name}
+                </div>
 
                 {!chatInfo.is_group && currentUser && (
                   <>
@@ -288,25 +292,20 @@ function ChatRoom() {
                         );
 
                         return otherUser ? (
-                          <div className="text-sm">
+                          <div className="flex items-center gap-2 mt-1">
                             <span
                               className={`h-3 w-3 rounded-full ${
                                 otherUser.online_status
-                                  ? "bg-green-500"
+                                  ? "bg-green-400"
                                   : "bg-gray-500"
                               }`}
                               title={
                                 otherUser.online_status ? "Online" : "Offline"
                               }
                             ></span>
-                            <p className="text-gray-400 text-sm">
-                              @{otherUser.id}
-                            </p>
-                            <p className="text-gray-400 text-xs">
-                              {otherUser.online_status
-                                ? "Online"
-                                : "Offline"}
-                            </p>
+                            <span className="text-sm text-gray-400">
+                              {otherUser.online_status ? "Online" : "Offline"}
+                            </span>
                           </div>
                         ) : null;
                       })()}
