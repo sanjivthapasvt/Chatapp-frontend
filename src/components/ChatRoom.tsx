@@ -1,12 +1,11 @@
 import { jwtDecode } from "jwt-decode";
 import axiosInstance from "../services/AxiosInstance";
 import { useEffect, useContext, useRef, useState } from "react";
-import { FaUser } from "react-icons/fa";
+import { FaUser, FaEllipsisV, FaUsers } from "react-icons/fa";
 import { useParams } from "react-router-dom";
 import { Message } from "../services/interface";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { ChatContext } from "../services/ChatContext";
-//global timeout variable for "typing" indicator
 let typingTimeout: any;
 
 function ChatRoom() {
@@ -32,6 +31,7 @@ function ChatRoom() {
   const [hasMore, setHasMore] = useState(true);
   const [typingUsers, setTypingUsers] = useState<Set<string>>(new Set());
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [showSidebar, setShowSidebar] = useState(true);
 
   // Get current user info from localStorage
   const currentUser: number | null =
@@ -256,64 +256,87 @@ function ChatRoom() {
     }
   };
 
+  // Toggle sidebar visibility
+  const toggleSidebar = () => {
+    setShowSidebar(!showSidebar);
+  };
+
   return (
     <div className="flex h-screen">
-      <div className="flex-1 flex flex-col bg-[#111827] text-white">
+      <div
+        className={`flex-1 flex flex-col bg-[#111827] text-white ${
+          showSidebar ? "mr-64" : ""
+        }`}
+      >
         {/* Chat Header */}
-        <div className="flex items-center p-4 border-b border-gray-700">
-          {/* Avatar / Group Image */}
-          <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-800 flex items-center justify-center">
-            {chatInfo?.group_image ? (
-              <img
-                src={chatInfo.group_image}
-                alt="Group"
-                className="w-full h-full object-cover"
-              />
+        <div className="flex items-center justify-between p-4 border-b border-gray-700">
+          <div className="flex items-center">
+            {/* Avatar / Group Image */}
+            <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-800 flex items-center justify-center">
+              {chatInfo?.group_image ? (
+                <img
+                  src={chatInfo.group_image}
+                  alt="Group"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <FaUser className="text-gray-400 w-6 h-6" />
+              )}
+            </div>
+
+            {/* Chat Info */}
+            <div className="pl-4">
+              {!loading && chatInfo && (
+                <>
+                  <div className="text-lg font-semibold text-white">
+                    {chatInfo.chat_name}
+                  </div>
+
+                  {!chatInfo.is_group && currentUser && (
+                    <>
+                      {chatInfo.participants &&
+                        chatInfo.participants.length === 2 &&
+                        (() => {
+                          const otherUser = chatInfo.participants.find(
+                            (p) => p.id !== currentUser
+                          );
+
+                          return otherUser ? (
+                            <div className="flex items-center gap-2 mt-1">
+                              <span
+                                className={`h-3 w-3 rounded-full ${
+                                  otherUser.online_status
+                                    ? "bg-green-400"
+                                    : "bg-gray-500"
+                                }`}
+                                title={
+                                  otherUser.online_status ? "Online" : "Offline"
+                                }
+                              ></span>
+                              <span className="text-sm text-gray-400">
+                                {otherUser.online_status ? "Online" : "Offline"}
+                              </span>
+                            </div>
+                          ) : null;
+                        })()}
+                    </>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* Toggle sidebar button */}
+          <button
+            onClick={toggleSidebar}
+            className="p-2 rounded-full hover:bg-gray-700 transition-colors"
+          >
+            {chatInfo?.is_group ? (
+              <FaUsers className="text-gray-300" />
             ) : (
-              <FaUser className="text-gray-400 w-6 h-6" />
+              <FaEllipsisV className="text-gray-300" />
             )}
-          </div>
-
-          {/* Chat Info */}
-          <div className="pl-4">
-            {!loading && chatInfo && (
-              <>
-                <div className="text-lg font-semibold text-white">
-                  {chatInfo.chat_name}
-                </div>
-
-                {!chatInfo.is_group && currentUser && (
-                  <>
-                    {chatInfo.participants &&
-                      chatInfo.participants.length === 2 &&
-                      (() => {
-                        const otherUser = chatInfo.participants.find(
-                          (p) => p.id !== currentUser
-                        );
-
-                        return otherUser ? (
-                          <div className="flex items-center gap-2 mt-1">
-                            <span
-                              className={`h-3 w-3 rounded-full ${
-                                otherUser.online_status
-                                  ? "bg-green-400"
-                                  : "bg-gray-500"
-                              }`}
-                              title={
-                                otherUser.online_status ? "Online" : "Offline"
-                              }
-                            ></span>
-                            <span className="text-sm text-gray-400">
-                              {otherUser.online_status ? "Online" : "Offline"}
-                            </span>
-                          </div>
-                        ) : null;
-                      })()}
-                  </>
-                )}
-              </>
-            )}
-          </div>
+          </button>
         </div>
 
         {/* Chat Body with infinite scroll */}
@@ -395,6 +418,91 @@ function ChatRoom() {
           </button>
         </div>
       </div>
+
+      {/* Right Sidebar for Participants */}
+      {showSidebar && (
+        <div className="fixed right-0 w-64 h-full bg-[#1a2235] border-l border-gray-700 flex flex-col">
+          <div className="p-4 border-b border-gray-700">
+            <h2 className="text-lg font-semibold text-white">Group Info</h2>
+          </div>
+
+          <div className="p-4 border-b border-gray-700">
+            <h3 className="text-md font-semibold text-gray-300 uppercase tracking-wider mb-2">
+              PARTICIPANTS
+            </h3>
+
+            {/* Online Users */}
+            <div className="mb-4">
+              <h4 className="text-sm text-green-400 mb-2">Online</h4>
+              <div className="space-y-2">
+                {!loading &&
+                  chatInfo?.participants &&
+                  chatInfo.participants
+                    .filter((p) => p.online_status)
+                    .map((participant) => (
+                      <div
+                        key={participant.id}
+                        className="flex items-center gap-2"
+                      >
+                        <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-800 flex items-center justify-center">
+                          {participant.profile_pic ? (
+                            <img
+                              src={participant.profile_pic}
+                              alt={participant.username}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <FaUser className="text-gray-400 w-3 h-3" />
+                          )}
+                        </div>
+                        <div className="flex items-center">
+                          <span className="text-white">
+                            {participant.username}
+                          </span>
+                          <span className="h-2 w-2 ml-2 rounded-full bg-green-400"></span>
+                        </div>
+                      </div>
+                    ))}
+              </div>
+            </div>
+
+            {/* Offline Users */}
+            <div>
+              <h4 className="text-sm text-gray-400 mb-2">Offline</h4>
+              <div className="space-y-2">
+                {!loading &&
+                  chatInfo?.participants &&
+                  chatInfo.participants
+                    .filter((p) => !p.online_status)
+                    .map((participant) => (
+                      <div
+                        key={participant.id}
+                        className="flex items-center gap-2"
+                      >
+                        <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-800 flex items-center justify-center">
+                          {participant.profile_pic ? (
+                            <img
+                              src={participant.profile_pic}
+                              alt={participant.username}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <FaUser className="text-gray-400 w-3 h-3" />
+                          )}
+                        </div>
+                        <div className="flex items-center">
+                          <span className="text-white">
+                            {participant.username}
+                          </span>
+                          <span className="h-2 w-2 ml-2 rounded-full bg-gray-500"></span>
+                        </div>
+                      </div>
+                    ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
