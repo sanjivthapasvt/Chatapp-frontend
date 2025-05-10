@@ -1,7 +1,7 @@
 import { jwtDecode } from "jwt-decode";
 import axiosInstance from "../services/AxiosInstance";
 import { useEffect, useContext, useRef, useState } from "react";
-import { FaUser, FaEllipsisV, FaUsers } from "react-icons/fa";
+import { FaUser, FaEllipsisV, FaUsers, FaPaperPlane } from "react-icons/fa";
 import { useParams } from "react-router-dom";
 import { Message } from "../services/interface";
 import InfiniteScroll from "react-infinite-scroll-component";
@@ -261,18 +261,26 @@ function ChatRoom() {
     setShowSidebar(!showSidebar);
   };
 
+  // Format the timestamp for message bubble
+  const formatTime = (timestamp: string) => {
+    return new Date(timestamp).toLocaleTimeString([], {
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
   return (
-    <div className="flex h-screen">
+    <div className="flex h-screen bg-gray-950">
       <div
-        className={`flex-1 flex flex-col bg-[#111827] text-white ${
+        className={`flex-1 flex flex-col bg-gray-950 text-white transition-all ${
           showSidebar ? "mr-64" : ""
         }`}
       >
         {/* Chat Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-700">
+        <div className="flex items-center justify-between p-4 border-b border-gray-800 bg-gray-900 shadow-md">
           <div className="flex items-center">
             {/* Avatar / Group Image */}
-            <div className="w-12 h-12 rounded-full overflow-hidden bg-gray-800 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-800 flex items-center justify-center shadow-inner">
               {chatInfo?.group_image ? (
                 <img
                   src={chatInfo.group_image}
@@ -280,15 +288,15 @@ function ChatRoom() {
                   className="w-full h-full object-cover"
                 />
               ) : (
-                <FaUser className="text-gray-400 w-6 h-6" />
+                <FaUser className="text-gray-400 w-5 h-5" />
               )}
             </div>
 
             {/* Chat Info */}
-            <div className="pl-4">
+            <div className="pl-3">
               {!loading && chatInfo && (
                 <>
-                  <div className="text-lg font-semibold text-white">
+                  <div className="text-base font-semibold text-white">
                     {chatInfo.chat_name}
                   </div>
 
@@ -302,18 +310,18 @@ function ChatRoom() {
                           );
 
                           return otherUser ? (
-                            <div className="flex items-center gap-2 mt-1">
+                            <div className="flex items-center gap-2">
                               <span
-                                className={`h-3 w-3 rounded-full ${
+                                className={`h-2 w-2 rounded-full ${
                                   otherUser.online_status
-                                    ? "bg-green-400"
+                                    ? "bg-green-500"
                                     : "bg-gray-500"
                                 }`}
                                 title={
                                   otherUser.online_status ? "Online" : "Offline"
                                 }
                               ></span>
-                              <span className="text-sm text-gray-400">
+                              <span className="text-xs text-gray-400">
                                 {otherUser.online_status ? "Online" : "Offline"}
                               </span>
                             </div>
@@ -329,7 +337,7 @@ function ChatRoom() {
           {/* Toggle sidebar button */}
           <button
             onClick={toggleSidebar}
-            className="p-2 rounded-full hover:bg-gray-700 transition-colors"
+            className="p-2 rounded-full hover:bg-gray-800 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
           >
             {chatInfo?.is_group ? (
               <FaUsers className="text-gray-300" />
@@ -342,7 +350,7 @@ function ChatRoom() {
         {/* Chat Body with infinite scroll */}
         <div
           id="scrollableDiv"
-          className="flex-1 overflow-y-auto flex flex-col-reverse"
+          className="flex-1 overflow-y-auto flex flex-col-reverse bg-gradient-to-b from-gray-950 to-gray-950"
           ref={messagesContainerRef}
         >
           <InfiniteScroll
@@ -350,7 +358,9 @@ function ChatRoom() {
             next={() => fetchMessages(true)}
             hasMore={hasMore}
             loader={
-              <div className="text-center text-gray-400 py-2">Loading...</div>
+              <div className="text-center text-gray-400 py-2 text-sm">
+                <div className="inline-block px-3 py-1 bg-gray-900 rounded-full">Loading messages...</div>
+              </div>
             }
             style={{ display: "flex", flexDirection: "column-reverse" }}
             inverse={true}
@@ -359,82 +369,122 @@ function ChatRoom() {
             initialScrollY={0}
           >
             <div ref={messagesEndRef} />
-            <div className="flex flex-col space-y-2">
-              {message.map((msg) => (
-                <div
-                  key={msg.id}
-                  className={`flex ${
-                    currentUser === msg.sender.id
-                      ? "justify-end"
-                      : "justify-start"
-                  }`}
-                >
+            <div className="flex flex-col space-y-3">
+              {message.map((msg, index) => {
+                const isCurrentUser = currentUser === msg.sender.id;
+                const showSender = index === 0 || 
+                  message[index - 1].sender.id !== msg.sender.id;
+                
+                return (
                   <div
-                    className={`px-4 py-2 rounded-xl max-w-xs ${
-                      currentUser === msg.sender.id
-                        ? "bg-blue-600 text-white"
-                        : "bg-gray-400 text-black"
+                    key={msg.id}
+                    className={`flex flex-col ${
+                      isCurrentUser ? "items-end" : "items-start"
                     }`}
                   >
-                    {msg.content}
+                    {!isCurrentUser && showSender && (
+                      <span className="text-xs text-gray-500 ml-2 mb-1">
+                        {msg.sender.username}
+                      </span>
+                    )}
+                    <div className="flex items-end gap-1">
+                      {!isCurrentUser && !showSender && (
+                        <div className="w-6"></div>
+                      )}
+                      <div
+                        className={`px-4 py-2 rounded-2xl max-w-xs break-words ${
+                          isCurrentUser
+                            ? "bg-blue-600 text-white rounded-br-sm"
+                            : "bg-gray-800 text-white rounded-bl-sm"
+                        }`}
+                      >
+                        {msg.content}
+                        <span className="text-xs opacity-70 ml-2 float-right mt-1">
+                          {formatTime(msg.timestamp)}
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </InfiniteScroll>
         </div>
 
         {/* Typing indicator */}
         {[...typingUsers].filter((u) => u !== currentUsername).length > 0 && (
-          <div className="typing-indicator px-4 text-sm text-gray-400">
-            {[...typingUsers].filter((u) => u !== currentUsername).join(", ")}{" "}
-            {[...typingUsers].filter((u) => u !== currentUsername).length === 1
-              ? "is"
-              : "are"}{" "}
-            typing...
+          <div className="typing-indicator px-4 py-1 text-xs text-gray-400 bg-gray-900 bg-opacity-70">
+            <div className="flex items-center">
+              <div className="flex space-x-1 mr-2">
+                <span className="w-1 h-1 bg-gray-400 rounded-full animate-bounce"></span>
+                <span className="w-1 h-1 bg-gray-400 rounded-full animate-bounce delay-75"></span>
+                <span className="w-1 h-1 bg-gray-400 rounded-full animate-bounce delay-150"></span>
+              </div>
+              {[...typingUsers].filter((u) => u !== currentUsername).join(", ")}{" "}
+              {[...typingUsers].filter((u) => u !== currentUsername).length === 1
+                ? "is"
+                : "are"}{" "}
+              typing...
+            </div>
           </div>
         )}
 
         {/* Message input field */}
-        <div className="p-4 border-t border-gray-800 flex items-center">
-          <input
-            type="text"
-            placeholder="Send a message ..."
-            value={inputValue}
-            onChange={handleInputChange}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                sendMessage();
-              }
-            }}
-            className="flex-1 p-2 rounded-l bg-[#2A2A40] text-white placeholder-gray-400"
-          />
-          <button
-            className="bg-blue-600 px-4 py-2 rounded-r"
-            onClick={sendMessage}
-            disabled={!inputValue.trim()}
-          >
-            ➤
-          </button>
+        <div className="p-3 border-t border-gray-800 bg-gray-900">
+          <div className="flex items-center bg-gray-800 rounded-full px-4 shadow-inner">
+            <input
+              type="text"
+              placeholder="Type a message..."
+              value={inputValue}
+              onChange={handleInputChange}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  sendMessage();
+                }
+              }}
+              className="flex-1 py-3 bg-transparent text-white placeholder-gray-400 focus:outline-none text-sm"
+            />
+            <button
+              className={`ml-2 p-2 rounded-full focus:outline-none ${
+                inputValue.trim()
+                  ? "text-blue-400 hover:text-blue-300"
+                  : "text-gray-500"
+              }`}
+              onClick={sendMessage}
+              disabled={!inputValue.trim()}
+            >
+              <FaPaperPlane className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </div>
 
       {/* Right Sidebar for Participants */}
       {showSidebar && (
-        <div className="fixed right-0 w-64 h-full bg-[#1a2235] border-l border-gray-700 flex flex-col">
-          <div className="p-4 border-b border-gray-700">
-            <h2 className="text-lg font-semibold text-white">Group Info</h2>
+        <div className="fixed right-0 w-64 h-full bg-gray-900 border-l border-gray-800 flex flex-col shadow-xl">
+          <div className="p-4 border-b border-gray-800 bg-gray-950">
+            <h2 className="text-base font-semibold text-white flex items-center">
+              <span>Group Info</span>
+              {chatInfo?.is_group && (
+                <span className="ml-2 text-xs bg-gray-800 px-2 py-1 rounded-full text-gray-300">
+                  {chatInfo?.participants?.length || 0} Members
+                </span>
+              )}
+            </h2>
           </div>
 
-          <div className="p-4 border-b border-gray-700">
-            <h3 className="text-md font-semibold text-gray-300 uppercase tracking-wider mb-2">
+          <div className="p-4 flex-1 overflow-y-auto">
+            <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">
               PARTICIPANTS
             </h3>
 
             {/* Online Users */}
-            <div className="mb-4">
-              <h4 className="text-sm text-green-400 mb-2">Online</h4>
-              <div className="space-y-2">
+            <div className="mb-6">
+              <h4 className="text-xs text-green-500 mb-2 flex items-center">
+                <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                ONLINE
+              </h4>
+              <div className="space-y-3">
                 {!loading &&
                   chatInfo?.participants &&
                   chatInfo.participants
@@ -442,9 +492,9 @@ function ChatRoom() {
                     .map((participant) => (
                       <div
                         key={participant.id}
-                        className="flex items-center gap-2"
+                        className="flex items-center gap-2 hover:bg-gray-800 p-1 rounded-lg transition-colors"
                       >
-                        <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-800 flex items-center justify-center">
+                        <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-800 flex items-center justify-center relative shadow-md">
                           {participant.profile_pic ? (
                             <img
                               src={participant.profile_pic}
@@ -454,22 +504,30 @@ function ChatRoom() {
                           ) : (
                             <FaUser className="text-gray-400 w-3 h-3" />
                           )}
+                          <span className="absolute bottom-0 right-0 h-2 w-2 rounded-full bg-green-500 border border-gray-800"></span>
                         </div>
                         <div className="flex items-center">
-                          <span className="text-white">
+                          <span className="text-sm text-white">
                             {participant.username}
                           </span>
-                          <span className="h-2 w-2 ml-2 rounded-full bg-green-400"></span>
                         </div>
                       </div>
                     ))}
+                {!loading && 
+                  chatInfo?.participants && 
+                  !chatInfo.participants.filter(p => p.online_status).length && (
+                    <div className="text-xs text-gray-500 italic">No users online</div>
+                )}
               </div>
             </div>
 
             {/* Offline Users */}
             <div>
-              <h4 className="text-sm text-gray-400 mb-2">Offline</h4>
-              <div className="space-y-2">
+              <h4 className="text-xs text-gray-500 mb-2 flex items-center">
+                <span className="w-2 h-2 bg-gray-500 rounded-full mr-2"></span>
+                OFFLINE
+              </h4>
+              <div className="space-y-3">
                 {!loading &&
                   chatInfo?.participants &&
                   chatInfo.participants
@@ -477,27 +535,32 @@ function ChatRoom() {
                     .map((participant) => (
                       <div
                         key={participant.id}
-                        className="flex items-center gap-2"
+                        className="flex items-center gap-2 hover:bg-gray-800 p-1 rounded-lg transition-colors"
                       >
-                        <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-800 flex items-center justify-center">
+                        <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-800 flex items-center justify-center relative shadow-inner">
                           {participant.profile_pic ? (
                             <img
                               src={participant.profile_pic}
                               alt={participant.username}
-                              className="w-full h-full object-cover"
+                              className="w-full h-full object-cover opacity-90"
                             />
                           ) : (
-                            <FaUser className="text-gray-400 w-3 h-3" />
+                            <FaUser className="text-gray-500 w-3 h-3" />
                           )}
+                          <span className="absolute bottom-0 right-0 h-2 w-2 rounded-full bg-gray-500 border border-gray-800"></span>
                         </div>
                         <div className="flex items-center">
-                          <span className="text-white">
+                          <span className="text-sm text-gray-300">
                             {participant.username}
                           </span>
-                          <span className="h-2 w-2 ml-2 rounded-full bg-gray-500"></span>
                         </div>
                       </div>
                     ))}
+                {!loading && 
+                  chatInfo?.participants && 
+                  !chatInfo.participants.filter(p => !p.online_status).length && (
+                    <div className="text-xs text-gray-500 italic">No offline users</div>
+                )}
               </div>
             </div>
           </div>

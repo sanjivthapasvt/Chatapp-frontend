@@ -36,8 +36,15 @@ export interface ChatDetails {
   last_message: {
     content: string;
     timestamp: string;
+    sender_name: string;
   } | null;
 }
+
+export type CreateRoomData = {
+  room_name: string;
+  participant_ids: number[];
+  group_image: File | null;
+};
 
 export interface UserProfileUpdate {
   email: string;

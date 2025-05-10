@@ -7,7 +7,7 @@ import {
   Navigate,
   useNavigate,
 } from "react-router-dom";
-import Chats from "./components/SideBar";
+import Chats from "./components/SideBarChats";
 import Auth from "./components/auth";
 import Friends from "./components/Friends";
 import Home from "./components/Home";
