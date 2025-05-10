@@ -24,7 +24,7 @@ import { handleLogout } from "../services/AuthService";
 import { ChatContext } from "../services/ChatContext";
 import { ChatDetails, CreateRoomData, User } from "../services/interface";
 import logo from "../assets/svt.png";
-import { toast } from "react-toastify";
+import { toast, ToastContainer, Bounce } from "react-toastify";
 
 function Chats() {
   const context = useContext(ChatContext);
@@ -308,6 +308,18 @@ function Chats() {
       className="fixed left-0 top-0 h-full bg-slate-900 text-white transition-all duration-300 z-40 shadow-xl 
           md:w-64 w-64 flex flex-col"
     >
+      <ToastContainer
+        position="top-right"
+        autoClose={1500}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        pauseOnFocusLoss={false}
+        draggable
+        pauseOnHover={false}
+        theme="dark"
+        transition={Bounce}
+      />
       {/* Header with brand/app name */}
       <div className="px-5 py-4 border-b border-slate-800 flex items-center justify-between">
         <div className="flex items-center gap-2">

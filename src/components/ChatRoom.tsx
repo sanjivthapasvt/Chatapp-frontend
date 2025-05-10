@@ -6,13 +6,13 @@ import { useParams } from "react-router-dom";
 import { Message } from "../services/interface";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { ChatContext } from "../services/ChatContext";
-import { toast } from "react-toastify";
+import { toast, ToastContainer, Bounce } from "react-toastify";
 let typingTimeout: any;
 
 function ChatRoom() {
   const context = useContext(ChatContext);
   if (!context) return null;
-  
+
   // Base URLs from environment variables
   const baseUrl = import.meta.env.VITE_BASE_URL;
   const WsBaseUrl = import.meta.env.VITE_WS_URL;
@@ -27,15 +27,15 @@ function ChatRoom() {
   const [message, setMessage] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const { chatInfo, setChatInfo } = context;
-  
+
   // Refs for scrolling behavior
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
-  
+
   // Pagination state
   const [cursor, setCursor] = useState<string | null>(null);
   const [hasMore, setHasMore] = useState(true);
-  
+
   // UI state
   const [typingUsers, setTypingUsers] = useState<Set<string>>(new Set());
   const [isLoadingMore, setIsLoadingMore] = useState(false);
@@ -127,7 +127,7 @@ function ChatRoom() {
       }
     } catch (error) {
       console.error("Error fetching messages: ", error);
-      toast.error("Something went wrong while fetching the message")
+      toast.error("Something went wrong while fetching the message");
     } finally {
       setIsLoadingMore(false);
     }
@@ -151,7 +151,7 @@ function ChatRoom() {
     setCursor(null);
     setHasMore(true);
     setMessage([]);
-    
+
     // Load new data
     fetchChatInfo();
     fetchMessages();
@@ -183,7 +183,7 @@ function ChatRoom() {
             if (prevMessages.some((msg) => msg.id === newMessage.id)) {
               return prevMessages;
             }
-            
+
             // Add message and maintain chronological sorting
             return [...prevMessages, newMessage].sort(
               (a, b) =>
@@ -295,8 +295,8 @@ function ChatRoom() {
   // Format timestamp in a user-friendly way (hours:minutes)
   const formatTime = (timestamp: string) => {
     return new Date(timestamp).toLocaleTimeString([], {
-      hour: '2-digit',
-      minute: '2-digit'
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -308,6 +308,18 @@ function ChatRoom() {
           showSidebar ? "mr-64" : ""
         }`}
       >
+        <ToastContainer
+          position="top-right"
+          autoClose={1500}
+          hideProgressBar={false}
+          newestOnTop
+          closeOnClick
+          pauseOnFocusLoss={false}
+          draggable
+          pauseOnHover={false}
+          theme="dark"
+          transition={Bounce}
+        />
         {/* Chat Header with room info and controls */}
         <div className="flex items-center justify-between p-4 border-b border-gray-800 bg-gray-900 shadow-md">
           <div className="flex items-center">
@@ -393,7 +405,9 @@ function ChatRoom() {
             hasMore={hasMore}
             loader={
               <div className="text-center text-gray-400 py-2 text-sm">
-                <div className="inline-block px-3 py-1 bg-gray-900 rounded-full">Loading messages...</div>
+                <div className="inline-block px-3 py-1 bg-gray-900 rounded-full">
+                  Loading messages...
+                </div>
               </div>
             }
             style={{ display: "flex", flexDirection: "column-reverse" }}
@@ -404,15 +418,15 @@ function ChatRoom() {
           >
             {/* Invisible div that helps with auto-scrolling */}
             <div ref={messagesEndRef} />
-            
+
             {/* Message bubbles */}
             <div className="flex flex-col space-y-3">
               {message.map((msg, index) => {
                 const isCurrentUser = currentUser === msg.sender.id;
                 // Only show username for first message in a sequence from the same user
-                const showSender = index === 0 || 
-                  message[index - 1].sender.id !== msg.sender.id;
-                
+                const showSender =
+                  index === 0 || message[index - 1].sender.id !== msg.sender.id;
+
                 return (
                   <div
                     key={msg.id}
@@ -463,8 +477,11 @@ function ChatRoom() {
                 <span className="w-1 h-1 bg-gray-400 rounded-full animate-bounce delay-150"></span>
               </div>
               {/* Smart grammar: "is typing" vs "are typing" */}
-              {[...typingUsers].filter((u) => u !== currentUsername).join(", ")}{" "}
-              {[...typingUsers].filter((u) => u !== currentUsername).length === 1
+              {[...typingUsers]
+                .filter((u) => u !== currentUsername)
+                .join(", ")}{" "}
+              {[...typingUsers].filter((u) => u !== currentUsername).length ===
+              1
                 ? "is"
                 : "are"}{" "}
               typing...
@@ -561,11 +578,14 @@ function ChatRoom() {
                       </div>
                     ))}
                 {/* Show message when no online users */}
-                {!loading && 
-                  chatInfo?.participants && 
-                  !chatInfo.participants.filter(p => p.online_status).length && (
-                    <div className="text-xs text-gray-500 italic">No users online</div>
-                )}
+                {!loading &&
+                  chatInfo?.participants &&
+                  !chatInfo.participants.filter((p) => p.online_status)
+                    .length && (
+                    <div className="text-xs text-gray-500 italic">
+                      No users online
+                    </div>
+                  )}
               </div>
             </div>
 
@@ -607,11 +627,14 @@ function ChatRoom() {
                       </div>
                     ))}
                 {/* Show message when no offline users */}
-                {!loading && 
-                  chatInfo?.participants && 
-                  !chatInfo.participants.filter(p => !p.online_status).length && (
-                    <div className="text-xs text-gray-500 italic">No offline users</div>
-                )}
+                {!loading &&
+                  chatInfo?.participants &&
+                  !chatInfo.participants.filter((p) => !p.online_status)
+                    .length && (
+                    <div className="text-xs text-gray-500 italic">
+                      No offline users
+                    </div>
+                  )}
               </div>
             </div>
           </div>
