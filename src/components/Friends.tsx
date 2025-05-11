@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { User } from "../services/interface";
 import axiosInstance from "../services/AxiosInstance";
-import { toast, ToastContainer, Bounce } from "react-toastify";
+import { toast} from "react-toastify";
 import {
   UserPlus,
   Users,
@@ -116,19 +116,6 @@ function Friends() {
 
   return (
     <div className="bg-gray-900 text-white min-h-screen p-4">
-      <ToastContainer
-        position="top-right"
-        autoClose={1500}
-        hideProgressBar={false}
-        newestOnTop
-        closeOnClick
-        pauseOnFocusLoss={false}
-        draggable
-        pauseOnHover={false}
-        theme="dark"
-        transition={Bounce}
-      />
-
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">

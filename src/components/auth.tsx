@@ -1,7 +1,7 @@
 import { useState, useContext } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import { Bounce, ToastContainer, toast } from "react-toastify";
+import { toast } from "react-toastify";
 import { jwtDecode } from "jwt-decode";
 import { ChatContext } from "../services/ChatContext";
 
@@ -108,18 +108,6 @@ function Auth() {
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-slate-900 p-4">
-      <ToastContainer
-        position="top-right"
-        autoClose={1500}
-        hideProgressBar={false}
-        newestOnTop
-        closeOnClick
-        pauseOnFocusLoss={false}
-        draggable
-        pauseOnHover={false}
-        theme="dark"
-        transition={Bounce}
-      />
       <div className="w-full max-w-md p-8 space-y-6 bg-slate-800 rounded-2xl shadow-xl border border-slate-700">
         <div className="mb-6 text-center">
           <h2 className="text-4xl font-bold text-white mb-1">

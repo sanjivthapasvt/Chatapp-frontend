@@ -15,7 +15,7 @@ import ChatRoom from "./components/ChatRoom";
 import Notification from "./components/Notification";
 import Profile from "./components/Profile";
 import { ChatProvider } from "./services/ChatContext";
-
+import { ToastContainer, Bounce } from "react-toastify";
 type ProtectedRouteProps = {
   children: ReactNode;
 };
@@ -49,6 +49,18 @@ function Layout() {
 
   return (
     <div className="w-full h-full flex overflow-x-hidden">
+            <ToastContainer
+        position="top-right"
+        autoClose={1500}
+        hideProgressBar={false}
+        newestOnTop
+        closeOnClick
+        pauseOnFocusLoss={false}
+        draggable
+        pauseOnHover={false}
+        theme="dark"
+        transition={Bounce}
+      />
       {showChats && <Chats />}
       <div className={`flex-grow ${showChats ? "ml-0 md:ml-64" : "w-full"}`}>
         <Routes>
