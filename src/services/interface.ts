@@ -13,6 +13,7 @@ export interface User {
   friendship_status: "friends" | "request_sent" | "request_received" | "none" | null;
   outgoing_request_id: number | null;
   incoming_request_id: number | null;
+  is_admin: boolean;
 }
 
 export interface Message {

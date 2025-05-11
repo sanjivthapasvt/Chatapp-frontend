@@ -1,4 +1,3 @@
-import { jwtDecode } from "jwt-decode";
 import axiosInstance from "../services/AxiosInstance";
 import { useEffect, useContext, useRef, useState } from "react";
 import {
@@ -7,6 +6,8 @@ import {
   FaUsers,
   FaPaperPlane,
   FaUserFriends,
+  FaCrown,
+  FaUserMinus,
 } from "react-icons/fa";
 import { useParams } from "react-router-dom";
 import { Message, User } from "../services/interface";
@@ -17,6 +18,7 @@ import { EllipsisVertical } from "lucide-react";
 let typingTimeout: any;
 import { Menu } from "@headlessui/react";
 import GroupActions from "./dependencies/GroupActions";
+import Swal from "sweetalert2";
 
 function ChatRoom() {
   const context = useContext(ChatContext);
@@ -37,6 +39,8 @@ function ChatRoom() {
   const [loading, setLoading] = useState(true);
   const { chatInfo, setChatInfo } = context;
   const [friends, setFriends] = useState<User[]>([]);
+  const [currentUserInfo, setCurrentUserInfo] = useState<User | null>(null);
+
   const fetchFriends = async () => {
     try {
       const { data } = await axiosInstance.get<User[]>(
@@ -70,12 +74,8 @@ function ChatRoom() {
     parseInt(localStorage.getItem("user_id") ?? "", 10) || null;
 
   // Get username from JWT token for typing indicators
-  let currentUsername: string = "";
   const token = localStorage.getItem("token");
-  if (token) {
-    const decoded: any = jwtDecode(token);
-    currentUsername = decoded.username;
-  }
+  const currentUsername = currentUserInfo?.username;
 
   // Smoothly scroll chat to bottom - called after loading initial messages or sending a new one
   const scrollToBottom = () => {
@@ -161,6 +161,10 @@ function ChatRoom() {
     try {
       const response = await axiosInstance.get(`${baseUrl}/chatrooms/${id}/`);
       setChatInfo(response.data);
+      const currentUserData = response.data.participants.find(
+        (participant: User) => participant.id === currentUser
+      );
+      setCurrentUserInfo(currentUserData);
     } catch (error) {
       console.error("Error fetching ChatInfo", error);
     } finally {
@@ -198,32 +202,51 @@ function ChatRoom() {
     username: User["username"]
   ) => {
     try {
-      await axiosInstance.post(
-        `${baseUrl}/chatrooms/${chatId}/remove_member/`,
-        {
-          user_id: userId,
-        }
-      );
-      toast.success(`Successfully removed ${username} from group!`);
-      fetchChatInfo();
-    } catch (error) {
+      const result = await Swal.fire({
+        title: `Are you sure you want to remove ${username} from the group?`,
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonText: "Yes",
+        cancelButtonText: "No",
+      });
+      if (result.isConfirmed) {
+        await axiosInstance.post(
+          `${baseUrl}/chatrooms/${chatId}/remove_member/`,
+          {
+            user_id: userId,
+          }
+        );
+        toast.success(`Successfully removed ${username} from group!`);
+        fetchChatInfo();
+      }
+    } catch (error: any) {
       console.error("Error while removing member", error);
-      toast.error(
-        "Something went wrong while removing user, Please try again later!"
-      );
+      const errorMessage =
+        error.response?.data?.detail || "An unexpected error occured.";
+      toast.error(errorMessage);
     }
   };
 
   const leaveRoom = async (chatId: number) => {
     try {
-      await axiosInstance.post(`${baseUrl}/chatrooms/${chatId}/leave_room/`);
-      toast.success(`Successfully left the group!`);
-      fetchChatInfo();
-    } catch (error) {
+      const result = await Swal.fire({
+        title: "Do you want to leave the Group?",
+        text: "All the messages will be deleted, are you sure?",
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonText: "Yes",
+        cancelButtonText: "No",
+      });
+      if (result.isConfirmed) {
+        await axiosInstance.post(`${baseUrl}/chatrooms/${chatId}/leave_room/`);
+        toast.success("Successfully left the group!");
+        fetchChatInfo();
+      }
+    } catch (error: any) {
       console.error("Error while removing member", error);
-      toast.error(
-        "Something went wrong while lefting group, Please try again later!"
-      );
+      const errorMessage =
+        error.response?.data?.detail || "An unexpected error occured.";
+      toast.error(errorMessage);
     }
   };
 
@@ -233,16 +256,28 @@ function ChatRoom() {
     username: User["username"]
   ) => {
     try {
-      await axiosInstance.post(`${baseUrl}/chatrooms/${chatId}/assign_admin/`, {
-        user_id: userId,
+      const result = await Swal.fire({
+        title: `Are you sure you want to remove ${username} from the group?`,
+        icon: "question",
+        showCancelButton: true,
+        confirmButtonText: "Yes",
+        cancelButtonText: "No",
       });
-      toast.success(`Successfully added ${username} as admin!`);
-      fetchChatInfo();
-    } catch (error) {
+      if (result.isConfirmed) {
+        await axiosInstance.post(
+          `${baseUrl}/chatrooms/${chatId}/assign_admin/`,
+          {
+            user_id: userId,
+          }
+        );
+        toast.success(`Successfully added ${username} as admin!`);
+        fetchChatInfo();
+      }
+    } catch (error: any) {
       console.error("Error while assigning admin", error);
-      toast.error(
-        "Something went wrong while assigning admin, Please try again later!"
-      );
+      const errorMessage =
+        error.response?.data?.detail || "An unexpected error occured.";
+      toast.error(errorMessage);
     }
   };
 
@@ -252,32 +287,36 @@ function ChatRoom() {
 
     return (
       <Menu as="div" className="relative inline-block text-left">
-        <Menu.Button className="text-white">
+        <Menu.Button className="text-gray-400 hover:text-white transition-colors">
           <EllipsisVertical size={15} />
         </Menu.Button>
-
-        <Menu.Items className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-          <div className="py-1 text-sm text-gray-700">
-            <Menu.Item>
-              {({ active }) => (
-                <button
-                  onClick={handleAddAdmin}
-                  className={`${
-                    active ? "bg-gray-100" : ""
-                  } block w-full px-4 py-2 text-left`}
-                >
-                  Assign Admin
-                </button>
-              )}
-            </Menu.Item>
+        <Menu.Items className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-gray-800 shadow-lg ring-1 ring-gray-700 ring-opacity-5 focus:outline-none">
+          <div className="py-1 text-sm text-gray-300">
+            {/* Only show Assign Admin option if user is not already an admin */}
+            {!user.is_admin && (
+              <Menu.Item>
+                {({ active }) => (
+                  <button
+                    onClick={handleAddAdmin}
+                    className={`${
+                      active ? "bg-gray-700" : ""
+                    } block w-full px-4 py-2 text-left flex items-center`}
+                  >
+                    <FaCrown className="text-yellow-400 mr-2 w-3 h-3" />
+                    Assign Admin
+                  </button>
+                )}
+              </Menu.Item>
+            )}
             <Menu.Item>
               {({ active }) => (
                 <button
                   onClick={handleRemove}
                   className={`${
-                    active ? "bg-gray-100" : ""
-                  } block w-full px-4 py-2 text-left`}
+                    active ? "bg-gray-700" : ""
+                  } block w-full px-4 py-2 text-left flex items-center text-red-400`}
                 >
+                  <FaUserMinus className="mr-2 w-3 h-3" />
                   Remove Member
                 </button>
               )}
@@ -451,7 +490,6 @@ function ChatRoom() {
           showSidebar ? "mr-64" : ""
         }`}
       >
-
         {/* Enhanced Chat Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-800 bg-gray-900 shadow-lg">
           <div className="flex items-center">
@@ -675,7 +713,7 @@ function ChatRoom() {
         </div>
       </div>
 
-      {/* Enhanced Right Sidebar with animations */}
+      {/* Right Sidebar */}
       {showSidebar && chatInfo && (
         <div className="fixed right-0 w-64 h-full bg-gray-900 border-l border-gray-800 flex flex-col shadow-xl animate-slideIn">
           <div className="p-4 border-b border-gray-800 bg-gray-950">
@@ -726,17 +764,27 @@ function ChatRoom() {
                             <FaUser className="text-gray-400 w-3 h-3" />
                           )}
                         </div>
-                        <div className="flex-1 overflow-hidden">
+                        <div className="flex-1 overflow-hidden flex items-center">
                           <span className="text-sm text-white font-medium truncate block">
                             {participant.username}
                           </span>
+                          {participant.is_admin && (
+                            <FaCrown
+                              className="text-yellow-400 ml-1 w-3 h-3"
+                              title="Admin"
+                            />
+                          )}
                         </div>
-                        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                          <MemberActions
-                            chatId={chatInfo.id}
-                            user={participant}
-                          />
-                        </div>
+                        {/* Only show MemberActions if current user is admin */}
+                        {currentUserInfo?.is_admin &&
+                          currentUserInfo.id !== participant.id && (
+                            <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                              <MemberActions
+                                chatId={chatInfo.id}
+                                user={participant}
+                              />
+                            </div>
+                          )}
                       </div>
                     ))}
                 {/* Show message when no online users */}
@@ -751,7 +799,7 @@ function ChatRoom() {
               </div>
             </div>
 
-            {/* Offline Users Section with enhanced styling */}
+            {/* Offline Users Section */}
             <div>
               <h4 className="text-xs text-gray-500 mb-2 flex items-center font-medium">
                 <span className="w-2 h-2 bg-gray-500 rounded-full mr-2"></span>
@@ -768,7 +816,7 @@ function ChatRoom() {
                         key={participant.id}
                         className="flex items-center gap-2 hover:bg-gray-800 p-2 rounded-lg transition-colors group"
                       >
-                        {/* User avatar with enhanced styling */}
+                        {/* User avatar */}
                         <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-800 flex items-center justify-center relative shadow-inner opacity-90">
                           {participant.profile_pic ? (
                             <img
@@ -780,17 +828,27 @@ function ChatRoom() {
                             <FaUser className="text-gray-500 w-3 h-3" />
                           )}
                         </div>
-                        <div className="flex-1 overflow-hidden">
+                        <div className="flex-1 overflow-hidden flex items-center">
                           <span className="text-sm text-gray-300 truncate block">
                             {participant.username}
                           </span>
+                          {participant.is_admin && (
+                            <FaCrown
+                              className="text-yellow-400 ml-1 w-3 h-3"
+                              title="Admin"
+                            />
+                          )}
                         </div>
-                        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-                          <MemberActions
-                            chatId={chatInfo.id}
-                            user={participant}
-                          />
-                        </div>
+                        {/* Only show MemberActions if current user is admin */}
+                        {currentUserInfo?.is_admin &&
+                          currentUserInfo.id !== participant.id && (
+                            <div className="opacity-0 group-hover:opacity-100 transition-opacity">
+                              <MemberActions
+                                chatId={chatInfo.id}
+                                user={participant}
+                              />
+                            </div>
+                          )}
                       </div>
                     ))}
                 {/* Show message when no offline users */}
