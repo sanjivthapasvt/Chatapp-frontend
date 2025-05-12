@@ -62,9 +62,10 @@ function Profile() {
   const fetchFriends = async () => {
     try {
       const { data } = await axiosInstance.get<User[]>(
-        `${baseUrl}/friends/list_friends/`
+        `${baseUrl}/friends/`
       );
       setFriends(data);
+      sessionStorage.setItem('friends', JSON.stringify(data))
     } catch (err) {
       console.error(err);
     }

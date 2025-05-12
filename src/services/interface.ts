@@ -7,7 +7,7 @@ export interface User {
   first_name: string;
   last_name: string;
   profile_pic: string;
-  friends: User[];
+  friends: number[];
   online_status:boolean;
   last_seen: string;
   friendship_status: "friends" | "request_sent" | "request_received" | "none" | null;

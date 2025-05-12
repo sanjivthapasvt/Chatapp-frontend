@@ -38,23 +38,9 @@ function ChatRoom() {
   const [message, setMessage] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
   const { chatInfo, setChatInfo } = context;
-  const [friends, setFriends] = useState<User[]>([]);
+
   const [currentUserInfo, setCurrentUserInfo] = useState<User | null>(null);
 
-  const fetchFriends = async () => {
-    try {
-      const { data } = await axiosInstance.get<User[]>(
-        `${baseUrl}/friends/list_friends/`
-      );
-      setFriends(data);
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
-  useEffect(() => {
-    fetchFriends();
-  }, []);
   // Refs for scrolling behavior
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -73,7 +59,6 @@ function ChatRoom() {
   const currentUser: number | null =
     parseInt(localStorage.getItem("user_id") ?? "", 10) || null;
 
-  // Get username from JWT token for typing indicators
   const token = localStorage.getItem("token");
   const currentUsername = currentUserInfo?.username;
 
@@ -326,6 +311,7 @@ function ChatRoom() {
       </Menu>
     );
   };
+
 
   // Reset and refresh data when changing chat rooms
   useEffect(() => {
@@ -602,6 +588,7 @@ function ChatRoom() {
             <div className="flex flex-col space-y-4">
               {message.map((msg, index) => {
                 const isCurrentUser = currentUser === msg.sender.id;
+                const senderInfo = chatInfo?.participants.find((user: { id: number; }) => user.id === msg.sender.id);
                 const showSender =
                   index === 0 || message[index - 1].sender.id !== msg.sender.id;
                 const showAvatar = !isCurrentUser && showSender;
@@ -616,18 +603,18 @@ function ChatRoom() {
                     {/* Username for other people's messages */}
                     {!isCurrentUser && showSender && (
                       <span className="text-xs text-gray-500 ml-12 mb-1">
-                        {msg.sender.username}
+                        {senderInfo?.username}
                       </span>
                     )}
                     <div className="flex items-end gap-2">
                       {/* Avatar for first message in a sequence */}
                       {showAvatar ? (
                         <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-800 flex items-center justify-center">
-                          {msg.sender.profile_pic ? (
+                          {senderInfo?.profile_pic ? (
                             <img
-                            src={msg.sender.profile_pic}
-                            alt={msg.sender.username.charAt(0).toUpperCase()}
-                            className="w-full h-full object-cover"
+                              src={senderInfo.profile_pic}
+                              alt={senderInfo.username.charAt(0).toUpperCase()}
+                              className="w-full h-full object-cover"
                             />
                           ) : (
                             <FaUser className="text-gray-400 w-3 h-3" />
@@ -636,7 +623,7 @@ function ChatRoom() {
                       ) : (
                         <div className="w-8"></div>
                       )}
-                        
+
                       {/* Message bubble with enhanced styling */}
                       <div
                         className={`px-4 py-2 rounded-2xl max-w-xs md:max-w-md lg:max-w-lg break-words shadow-md ${
@@ -721,7 +708,7 @@ function ChatRoom() {
               <span>Group Info</span>
               <GroupActions
                 chatId={chatInfo.id}
-                users={friends}
+                users={chatInfo?.participants}
                 addMember={addMember}
                 leaveRoom={leaveRoom}
                 participants={chatInfo.participants || []}

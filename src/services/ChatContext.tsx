@@ -1,4 +1,10 @@
-import React, { createContext, useState, useEffect, ReactNode } from "react";
+import React, {
+  createContext,
+  useState,
+  useEffect,
+  ReactNode,
+  useMemo,
+} from "react";
 import axiosInstance from "./AxiosInstance";
 import { ChatDetails, User } from "./interface";
 
@@ -38,20 +44,24 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
     localStorage.removeItem("token");
     localStorage.removeItem("refresh_token");
     localStorage.removeItem("user_id");
+    localStorage.removeItem("user_info");
   };
 
-  const contextValue = {
-    userInfo,
-    setUserInfo,
-    chatInfo,
-    setChatInfo,
-    chatList,
-    setChatList,
-    isAuthenticated,
-    login,
-    logout,
-    loading,
-  };
+  const contextValue = useMemo(
+    () => ({
+      userInfo,
+      setUserInfo,
+      chatInfo,
+      setChatInfo,
+      chatList,
+      setChatList,
+      isAuthenticated,
+      login,
+      logout,
+      loading,
+    }),
+    [userInfo, chatInfo, chatList, isAuthenticated, loading]
+  );
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -63,9 +73,19 @@ export const ChatProvider = ({ children }: { children: ReactNode }) => {
         return;
       }
 
+      const cachedUser = localStorage.getItem("user_info");
+      if (cachedUser) {
+        setUserInfo(JSON.parse(cachedUser));
+        setIsAuthenticated(true);
+        setLoading(false);
+        return;
+      }
+
       try {
         const baseUrl = import.meta.env.VITE_BASE_URL;
-        await axiosInstance.get(`${baseUrl}/profile/`);
+        const response = await axiosInstance.get(`${baseUrl}/profile/`);
+        setUserInfo(response.data);
+        localStorage.setItem("user_info", JSON.stringify(response.data));
         setIsAuthenticated(true);
       } catch (error: any) {
         if (error.response?.status === 401) {

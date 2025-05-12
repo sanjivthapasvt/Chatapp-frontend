@@ -157,10 +157,9 @@ function Chats() {
   //function to fetch friends
   const fetchFriends = async () => {
     try {
-      const { data } = await axiosInstance.get<User[]>(
-        `${baseUrl}/friends/list_friends/`
-      );
+      const { data } = await axiosInstance.get<User[]>(`${baseUrl}/friends/`);
       setFriends(data);
+      sessionStorage.setItem("friends", JSON.stringify(data));
     } catch (err) {
       console.error(err);
     }
@@ -220,8 +219,16 @@ function Chats() {
         console.log("WebSocket message received:", data);
 
         if (data.type === "group_created" && data.group) {
-          // Add the new group at the top
-          setChatList((prev) => [data.group, ...prev]);
+          setChatList((prev) => {
+            const exists = prev.some(chat => chat.id === data.group.id);
+            if (exists) {
+              return prev.map(chat => 
+                chat.id === data.group.id ? data.group : chat
+              );
+            }
+            return [data.group, ...prev];
+          });
+          
         } else if (data.type === "last_message_updated") {
           // Refresh the entire chat list
           fetchChats();
@@ -546,7 +553,9 @@ function Chats() {
                             />
                           ) : (
                             <span className="text-lg font-medium text-white">
-                              {chatroom.chat_name.charAt(0).toUpperCase()}
+                              {chatroom.chat_name
+                                ? chatroom.chat_name.charAt(0).toUpperCase()
+                                : "?"}
                             </span>
                           )}
                         </div>

@@ -66,6 +66,7 @@ function Friends() {
       );
       if (response.status === 200 || response.status === 201) {
         toast.success("Successfully accepted friend request");
+        sessionStorage.removeItem("friends");
       }
     } catch (error: any) {
       if (error.response?.status === 404 || error.response?.status === 410) {
@@ -178,7 +179,6 @@ function Friends() {
                     </span>
                   )}
                 </div>
-
                 <div className="flex-grow">
                   <p className="font-medium">{u.username}</p>
                   <p className="text-xs text-gray-400">
