@@ -625,9 +625,9 @@ function ChatRoom() {
                         <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-800 flex items-center justify-center">
                           {msg.sender.profile_pic ? (
                             <img
-                              src={msg.sender.profile_pic}
-                              alt={msg.sender.username}
-                              className="w-full h-full object-cover"
+                            src={msg.sender.profile_pic}
+                            alt={msg.sender.username.charAt(0).toUpperCase()}
+                            className="w-full h-full object-cover"
                             />
                           ) : (
                             <FaUser className="text-gray-400 w-3 h-3" />
@@ -636,7 +636,7 @@ function ChatRoom() {
                       ) : (
                         <div className="w-8"></div>
                       )}
-
+                        
                       {/* Message bubble with enhanced styling */}
                       <div
                         className={`px-4 py-2 rounded-2xl max-w-xs md:max-w-md lg:max-w-lg break-words shadow-md ${

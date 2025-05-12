@@ -646,7 +646,7 @@ function Chats() {
                     {userInfo.username.charAt(0).toUpperCase()}
                   </div>
                 )}
-                {/* Online status indicator */}
+                {/* Online status */}
                 <div
                   className={`absolute bottom-0 right-0 w-3 h-3 border-2 border-slate-900 rounded-full ${
                     userInfo.online_status ? "bg-green-500" : "bg-slate-400"

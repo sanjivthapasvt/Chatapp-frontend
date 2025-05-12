@@ -11,7 +11,6 @@ import Swal from "sweetalert2";
 
 function Profile() {
   const baseUrl = import.meta.env.VITE_BASE_URL;
-  const mediaBaseUrl = import.meta.env.VITE_MEDIA_BASE_URL;
   const isAuthenticated = Boolean(localStorage.getItem("token"));
   const [userData, setUserData] = useState<User | null>(null);
   const [friends, setFriends] = useState<User[]>([]);
@@ -71,14 +70,7 @@ function Profile() {
     }
   };
 
-  const friendImage = (path: string) => {
-    if (path.startsWith("http")) {
-      return;
-    }
-    if (path.startsWith("/media")) {
-      return `${mediaBaseUrl}/${path}`;
-    }
-  };
+
   const handleInputChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -358,7 +350,7 @@ function Profile() {
                       <div className="h-16 w-16 rounded-full bg-gray-600 overflow-hidden flex-shrink-0 border border-gray-500">
                         {f.profile_pic ? (
                           <img
-                            src={friendImage(f.profile_pic)}
+                            src={f.profile_pic}
                             alt={f.username.charAt(0).toUpperCase()}
                             className="w-full h-full object-cover"
                           />
