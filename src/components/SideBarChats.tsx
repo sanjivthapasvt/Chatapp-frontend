@@ -342,11 +342,11 @@ function Chats() {
           <div className="flex items-center">
             <span
               className={`w-2 h-2 rounded-full mr-1 ${
-                wsConnected ? "bg-green-400" : "bg-red-400"
+                userInfo?.online_status ? "bg-green-400" : "bg-red-400"
               }`}
             ></span>
             <span className="text-xs text-slate-400">
-              {wsConnected ? "Connected" : "Offline"}
+              {userInfo?.online_status ? "Connected" : "Offline"}
             </span>
           </div>
         </div>
@@ -665,7 +665,7 @@ function Chats() {
                   <img
                     src={userInfo.profile_pic}
                     className="w-10 h-10 rounded-full object-cover border-2 border-slate-700"
-                    alt={userInfo.username}
+                    alt={userInfo.username.charAt(0).toUpperCase()}
                   />
                 ) : (
                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-semibold">
