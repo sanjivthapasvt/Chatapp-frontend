@@ -216,22 +216,39 @@ function Chats() {
     wsConnection.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-        console.log("WebSocket message received:", data);
 
         if (data.type === "group_created" && data.group) {
           setChatList((prev) => {
-            const exists = prev.some(chat => chat.id === data.group.id);
+            const exists = prev.some((chat) => chat.id === data.group.id);
             if (exists) {
-              return prev.map(chat => 
+              return prev.map((chat) =>
                 chat.id === data.group.id ? data.group : chat
               );
             }
             return [data.group, ...prev];
           });
-          
-        } else if (data.type === "last_message_updated") {
-          // Refresh the entire chat list
-          fetchChats();
+        } else if (
+          data.type === "last_message_updated" &&
+          data.group_id &&
+          data.last_message
+        ) {
+          setChatList((prev) => {
+            const chatIndex = prev.findIndex(
+              (chat) => chat.id === data.group_id
+            );
+            if (chatIndex === -1) {
+              return prev;
+            }
+
+            const updatedChat = {
+              ...prev[chatIndex],
+              last_message: data.last_message,
+            };
+
+            const newList = [...prev];
+            newList.splice(chatIndex, 1);
+            return [updatedChat, ...newList];
+          });
         }
       } catch (error) {
         console.error("Error processing WebSocket message:", error);

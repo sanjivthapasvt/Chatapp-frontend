@@ -440,7 +440,7 @@ function ChatRoom() {
         content: inputValue,
       });
 
-      // Manually clear typing indicator since we're done typing
+      // clear typing indicator since we're done typing
       if (socket && socket.readyState === WebSocket.OPEN) {
         socket.send(
           JSON.stringify({
