@@ -566,7 +566,7 @@ function Chats() {
                             <img
                               src={chatroom.group_image}
                               alt={chatroom.chat_name.charAt(0).toUpperCase()}
-                              className="rounded-full object-cover"
+                              className="`rounded-full object-cover"
                             />
                           ) : (
                             <span className="text-lg font-medium text-white">

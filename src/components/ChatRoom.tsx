@@ -415,7 +415,6 @@ function ChatRoom() {
       );
     }
 
-    // Use debounce to avoid spamming typing events
     // Only send "stop typing" after user pauses for 1.5s
     clearTimeout(typingTimeout);
     typingTimeout = setTimeout(() => {
