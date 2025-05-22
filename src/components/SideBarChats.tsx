@@ -18,6 +18,7 @@ import {
   Check,
   ChevronsUpDown,
   ArrowLeft,
+  Bell,
 } from "lucide-react";
 import { Listbox, Transition } from "@headlessui/react";
 import axiosInstance from "../services/AxiosInstance";
@@ -81,16 +82,16 @@ function Chats() {
     };
 
     checkIsMobile();
-    window.addEventListener('resize', checkIsMobile);
+    window.addEventListener("resize", checkIsMobile);
 
-    return () => window.removeEventListener('resize', checkIsMobile);
+    return () => window.removeEventListener("resize", checkIsMobile);
   }, []);
 
   // Handle mobile navigation
   useEffect(() => {
     if (isMobile) {
       // If we're on a chat page, hide sidebar
-      const isOnChatPage = location.pathname.startsWith('/chatroom/');
+      const isOnChatPage = location.pathname.startsWith("/chatroom/");
       setShowSidebar(!isOnChatPage);
     } else {
       // Always show sidebar on desktop
@@ -326,7 +327,7 @@ function Chats() {
   const handleBackToChats = () => {
     if (isMobile) {
       setShowSidebar(true);
-      navigate('/');
+      navigate("/");
     }
   };
 
@@ -379,7 +380,7 @@ function Chats() {
   return (
     <>
       {/* Mobile Back Button (shows when on chat page) */}
-      {isMobile && location.pathname.startsWith('/chatroom/') && (
+      {isMobile && location.pathname.startsWith("/chatroom/") && (
         <button
           onClick={handleBackToChats}
           className="fixed top-4 left-4 z-50 p-2 bg-slate-800 hover:bg-slate-700 rounded-full text-white shadow-lg transition-colors"
@@ -391,9 +392,10 @@ function Chats() {
       <div
         id="sidebar"
         className={`fixed left-0 top-0 h-full bg-slate-900 text-white transition-all duration-300 z-40 shadow-xl flex flex-col
-          ${isMobile 
-            ? 'w-full' // Full width on mobile
-            : 'md:w-64 w-64' // Fixed width on desktop
+          ${
+            isMobile
+              ? "w-full" // Full width on mobile
+              : "md:w-64 w-64" // Fixed width on desktop
           }`}
       >
         {/* Header */}
@@ -495,7 +497,9 @@ function Chats() {
                           >
                             {({ selected }) => (
                               <>
-                                <span className={selected ? "font-semibold" : ""}>
+                                <span
+                                  className={selected ? "font-semibold" : ""}
+                                >
                                   {friend.username}
                                 </span>
                                 {selected && (
@@ -596,7 +600,9 @@ function Chats() {
               <div className="flex justify-center items-center h-64">
                 <div className="flex flex-col items-center gap-2">
                   <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
-                  <span className="text-sm text-slate-400">Loading chats...</span>
+                  <span className="text-sm text-slate-400">
+                    Loading chats...
+                  </span>
                 </div>
               </div>
             ) : (
@@ -675,7 +681,9 @@ function Chats() {
                                       :
                                     </span>
                                   )}
-                                  {truncateMessage(chatroom.last_message.content)}
+                                  {truncateMessage(
+                                    chatroom.last_message.content
+                                  )}
                                 </>
                               ) : (
                                 <span className="italic">
@@ -765,22 +773,28 @@ function Chats() {
 
             <div className="flex items-center gap-3">
               <Link
+                to="/notification"
+                className="text-slate-400 hover:text-indigo-400 transition-colors"
+              >
+                <Bell size={15} />
+              </Link>
+              <Link
                 to="/friends"
                 className="text-slate-400 hover:text-indigo-400 transition-colors"
               >
-                <Users size={20} />
+                <Users size={15} />
               </Link>
               <Link
                 to="/profile"
                 className="text-slate-400 hover:text-indigo-400 transition-colors"
               >
-                <Settings size={20} />
+                <Settings size={15} />
               </Link>
               <button
                 onClick={logout}
                 className="text-slate-400 hover:text-indigo-400 transition-colors"
               >
-                <LogOut size={20} />
+                <LogOut size={15} />
               </button>
             </div>
           </div>

@@ -60,3 +60,12 @@ export interface UserPasswordUpdate{
   new_password: string;
   confirm_password: string;
 }
+
+export interface NotificationInterface{
+  id: number;
+  sender: string;
+  message: string;
+  room_name: string;
+  timestamp: string;
+  is_read: boolean;
+}
