@@ -49,7 +49,7 @@ function Layout() {
 
   return (
     <div className="w-full h-full flex overflow-x-hidden">
-            <ToastContainer
+      <ToastContainer
         position="top-right"
         autoClose={1500}
         hideProgressBar={false}

@@ -312,7 +312,6 @@ function ChatRoom() {
     );
   };
 
-
   // Reset and refresh data when changing chat rooms
   useEffect(() => {
     // Clear state for the new room
@@ -459,13 +458,15 @@ function ChatRoom() {
     setShowSidebar(!showSidebar);
   };
 
-  // Format timestamp in a user-friendly way (hours:minutes)
-  const formatTime = (timestamp: string) => {
-    return new Date(timestamp).toLocaleTimeString([], {
-      hour: "2-digit",
+  // Format timestamp
+  function formatTimeHeader(dateStr: string): string {
+    const date = new Date(dateStr);
+    return date.toLocaleTimeString([], {
+      hour: "numeric",
       minute: "2-digit",
+      hour12: true,
     });
-  };
+  }
 
   return (
     <div className="flex h-screen bg-gray-950">
@@ -557,7 +558,7 @@ function ChatRoom() {
           </div>
         </div>
 
-        {/* Enhanced Messages area with better gradients */}
+        {/*Messages area */}
         <div
           id="scrollableDiv"
           className="flex-1 overflow-y-auto flex flex-col-reverse bg-gradient-to-b from-gray-950 via-gray-900 to-gray-950"
@@ -583,14 +584,43 @@ function ChatRoom() {
             {/* Invisible div that helps with auto-scrolling */}
             <div ref={messagesEndRef} />
 
-            {/* Enhanced Message bubbles with better styling */}
+            {/* Message*/}
             <div className="flex flex-col space-y-4">
-              {message.map((msg, index) => {
+              {message.map((msg, index: number) => {
                 const isCurrentUser = currentUser === msg.sender.id;
-                const senderInfo = chatInfo?.participants.find((user: { id: number; }) => user.id === msg.sender.id);
-                const showSender =
-                  index === 0 || message[index - 1].sender.id !== msg.sender.id;
-                const showAvatar = !isCurrentUser && showSender;
+                const senderInfo = chatInfo?.participants.find(
+                  (user: { id: number }) => user.id === msg.sender.id
+                );
+
+                const prevMsg = message[index - 1];
+                const nextMsg = message[index + 1];
+
+                const prevSenderId = prevMsg?.sender?.id;
+                const nextSenderId = nextMsg?.sender?.id;
+
+                const currentTime = new Date(msg.timestamp);
+                const prevTime = prevMsg ? new Date(prevMsg.timestamp) : null;
+
+                // --- Show time if it's the first message or 1 hour gap ---
+                let showTimeHeader = false;
+                if (
+                  index === 0 ||
+                  (prevTime &&
+                    currentTime.getTime() - prevTime.getTime() > 60 * 60 * 1000)
+                ) {
+                  showTimeHeader = true;
+                }
+
+                // --- show username if it's the first in a group ---
+                const showSenderName =
+                  !isCurrentUser &&
+                  (index === 0 || prevSenderId !== msg.sender.id);
+
+                // --- show avatar if it's the last in the group ---
+                const showAvatar =
+                  !isCurrentUser &&
+                  (index === message.length - 1 ||
+                    nextSenderId !== msg.sender.id);
 
                 return (
                   <div
@@ -599,31 +629,44 @@ function ChatRoom() {
                       isCurrentUser ? "items-end" : "items-start"
                     }`}
                   >
-                    {/* Username for other people's messages */}
-                    {!isCurrentUser && showSender && (
+                    {/* Time Heading */}
+                    {showTimeHeader && (
+                      <div className="w-full flex justify-center my-4">
+                        <div className="text-xs text-gray-400 px-4 py-1 rounded-full shadow-sm">
+                          {formatTimeHeader(msg.timestamp)}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Sender Name */}
+                    {showSenderName && (
                       <span className="text-xs text-gray-500 ml-12 mb-1">
                         {senderInfo?.username}
                       </span>
                     )}
-                    <div className="flex items-end gap-2">
-                      {/* Avatar for first message in a sequence */}
-                      {showAvatar ? (
-                        <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-800 flex items-center justify-center">
-                          {senderInfo?.profile_pic ? (
-                            <img
-                              src={senderInfo.profile_pic}
-                              alt={senderInfo.username.charAt(0).toUpperCase()}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <FaUser className="text-gray-400 w-3 h-3" />
-                          )}
-                        </div>
-                      ) : (
-                        <div className="w-8"></div>
-                      )}
 
-                      {/* Message bubble with enhanced styling */}
+                    <div className="flex items-end gap-2">
+                      {/* Spacer or Avatar */}
+                      {!isCurrentUser &&
+                        (showAvatar ? (
+                          <div className="w-8 h-8 rounded-full overflow-hidden bg-gray-800 flex items-center justify-center">
+                            {senderInfo?.profile_pic ? (
+                              <img
+                                src={senderInfo.profile_pic}
+                                alt={senderInfo.username
+                                  .charAt(0)
+                                  .toUpperCase()}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <FaUser className="text-gray-400 w-3 h-3" />
+                            )}
+                          </div>
+                        ) : (
+                          <div className="w-8" /> // Spacer to align
+                        ))}
+
+                      {/* Message Bubble */}
                       <div
                         className={`px-4 py-2 rounded-2xl max-w-xs md:max-w-md lg:max-w-lg break-words shadow-md ${
                           isCurrentUser
@@ -632,9 +675,6 @@ function ChatRoom() {
                         }`}
                       >
                         <div className="whitespace-pre-wrap">{msg.content}</div>
-                        <div className="text-xs opacity-70 mt-1 text-right">
-                          {formatTime(msg.timestamp)}
-                        </div>
                       </div>
                     </div>
                   </div>
