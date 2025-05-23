@@ -51,7 +51,7 @@ function Layout() {
     <div className="w-full h-full flex overflow-x-hidden">
       <ToastContainer
         position="top-right"
-        autoClose={1500}
+        autoClose={1000}
         hideProgressBar={false}
         newestOnTop
         closeOnClick

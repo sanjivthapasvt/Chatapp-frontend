@@ -43,6 +43,9 @@ function ChatRoom() {
 
   const [currentUserInfo, setCurrentUserInfo] = useState<User | null>(null);
 
+  //variable to manage multiple message sending
+  const [isSending, setIsSending] = useState(false);
+
   // Refs for scrolling behavior
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -78,8 +81,8 @@ function ChatRoom() {
     };
 
     checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    window.addEventListener("resize", checkMobile);
+    return () => window.removeEventListener("resize", checkMobile);
   }, [chatInfo]);
 
   // Smoothly scroll chat to bottom - called after loading initial messages or sending a new one
@@ -450,9 +453,10 @@ function ChatRoom() {
 
   // Send message and clear input field
   const sendMessage = async () => {
+    if (isSending) return;
     if (!inputValue.trim()) return; // Don't send empty messages
-
     try {
+      setIsSending(true);
       // Send message to server via API
       await axiosInstance.post(`${baseUrl}/chatrooms/${id}/messages/`, {
         content: inputValue,
@@ -468,9 +472,12 @@ function ChatRoom() {
         );
       }
 
-      setInputValue("");
+      setInputValue(""); //clear input field after message is sent
     } catch (error) {
       console.error("Something went wrong", error);
+      toast.error("Something went wrong while sending message")
+    } finally {
+      setIsSending(false);
     }
   };
 
@@ -499,7 +506,7 @@ function ChatRoom() {
     <div className="flex h-screen bg-gray-950 relative">
       {/* Mobile Sidebar Backdrop */}
       {isMobile && showSidebar && (
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
           onClick={handleSidebarBackdropClick}
         />
@@ -715,7 +722,9 @@ function ChatRoom() {
                             : "bg-gray-800 bg-gradient-to-br from-gray-700 to-gray-800 text-white rounded-bl-sm"
                         }`}
                       >
-                        <div className="whitespace-pre-wrap text-sm md:text-base">{msg.content}</div>
+                        <div className="whitespace-pre-wrap text-sm md:text-base">
+                          {msg.content}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -782,11 +791,13 @@ function ChatRoom() {
 
       {/* Right Sidebar */}
       {showSidebar && chatInfo && (
-        <div className={`${
-          isMobile 
-            ? "fixed right-0 top-0 w-80 max-w-full h-full z-50" 
-            : "fixed right-0 w-64 h-full"
-        } bg-gray-900 border-l border-gray-800 flex flex-col shadow-xl transition-transform duration-300 ease-in-out`}>
+        <div
+          className={`${
+            isMobile
+              ? "fixed right-0 top-0 w-80 max-w-full h-full z-50"
+              : "fixed right-0 w-64 h-full"
+          } bg-gray-900 border-l border-gray-800 flex flex-col shadow-xl transition-transform duration-300 ease-in-out`}
+        >
           {/* Sidebar Header */}
           <div className="flex items-center justify-between p-3 md:p-4 border-b border-gray-800 bg-gray-950">
             <h2 className="text-sm md:text-base font-semibold text-white flex items-center">
