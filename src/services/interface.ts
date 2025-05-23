@@ -65,7 +65,7 @@ export interface NotificationInterface{
   id: number;
   sender: string;
   message: string;
-  room_name: string;
+  chat_name: string;
   timestamp: string;
   is_read: boolean;
 }

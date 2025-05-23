@@ -3,6 +3,7 @@ import axiosInstance from "../services/AxiosInstance";
 import { toast } from "react-toastify";
 import { NotificationInterface } from "../services/interface";
 import { formatDistanceToNow } from "date-fns";
+import { Bell, Check, Trash2, CheckCheck } from "lucide-react";
 
 function Notification() {
   const baseUrl = import.meta.env.VITE_BASE_URL;
@@ -109,61 +110,96 @@ function Notification() {
   }, []);
 
   return (
-    <div className="p-4 max-w-2xl mx-auto">
-      <div className="flex justify-between items-center mb-4">
-        <h2 className="text-xl font-bold">Notifications</h2>
-        <button
-          onClick={markAllRead}
-          className="text-sm bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
-        >
-          Mark All as Read
-        </button>
+    <div className="bg-gray-900 text-white min-h-screen p-4">
+      {/* Header */}
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-2">
+          <Bell size={24} className="text-indigo-400" />
+          <h1 className="text-xl font-bold">Notifications</h1>
+        </div>
+        {notifications.length > 0 && (
+          <button
+            onClick={markAllRead}
+            className="px-4 py-2 text-sm bg-indigo-600 hover:bg-indigo-700 text-white rounded-md flex items-center gap-2"
+          >
+            <CheckCheck size={16} />
+            <span className="hidden sm:inline">Mark All Read</span>
+          </button>
+        )}
       </div>
 
+      {/* Notifications list */}
       {notifications.length === 0 ? (
-        <p className="text-gray-500 text-center">No notifications</p>
+        <div className="flex flex-col items-center justify-center mt-16 text-gray-400">
+          <Bell size={48} className="mb-4 opacity-50" />
+          <p>No notifications</p>
+        </div>
       ) : (
-        <ul className="space-y-3">
+        <div className="space-y-3">
           {notifications.map((notification) => (
-            <li
+            <div
               key={notification.id}
-              className={`p-4 rounded shadow-md flex justify-between items-start ${
+              className={`flex items-start gap-3 p-4 rounded-lg border ${
                 notification.is_read
-                  ? "bg-gray-100"
-                  : "bg-white border-l-4 border-blue-500"
+                  ? "bg-gray-800 border-gray-700"
+                  : "bg-gray-800 border-indigo-500"
               }`}
             >
-              <div>
-                <p className="font-semibold text-sm text-gray-700 mb-1">
-                  {notification.room_name || "Notification"}
+              {/* Notification indicator */}
+              <div className="flex-shrink-0 mt-1">
+                {!notification.is_read && (
+                  <div className="w-2 h-2 bg-indigo-500 rounded-full"></div>
+                )}
+                {notification.is_read && (
+                  <div className="w-2 h-2 bg-gray-600 rounded-full"></div>
+                )}
+              </div>
+
+              {/* Notification content */}
+              <div className="flex-grow min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <p className="font-medium text-sm text-white">
+                    {notification.chat_name || "Notification"}
+                  </p>
+                  {!notification.is_read && (
+                    <span className="px-2 py-0.5 text-xs bg-indigo-600 text-white rounded-full">
+                      New
+                    </span>
+                  )}
+                </div>
+                <p className="text-sm text-gray-300 mb-2">
+                  <span className="font-medium">{notification.sender}:</span>{" "}
+                  {notification.message}
                 </p>
-                <p className="text-sm text-gray-800">{notification.sender}: {notification.message}</p>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-gray-400">
                   {formatDistanceToNow(new Date(notification.timestamp), {
                     addSuffix: true,
                   })}
                 </p>
               </div>
 
-              <div className="flex flex-col space-y-1 items-end ml-4">
+              {/* Action buttons */}
+              <div className="flex flex-col gap-2 flex-shrink-0">
                 {!notification.is_read && (
                   <button
                     onClick={() => markRead(notification.id)}
-                    className="text-xs bg-green-500 text-white px-2 py-0.5 rounded hover:bg-green-600"
+                    className="px-3 py-1.5 text-xs bg-green-700 hover:bg-green-800 text-white rounded-md flex items-center gap-1"
                   >
-                    Mark Read
+                    <Check size={12} />
+                    <span className="hidden sm:inline">Read</span>
                   </button>
                 )}
                 <button
                   onClick={() => handleNotificationDelete(notification.id)}
-                  className="text-xs bg-red-500 text-white px-2 py-0.5 rounded hover:bg-red-600"
+                  className="px-3 py-1.5 text-xs bg-red-700 hover:bg-red-800 text-white rounded-md flex items-center gap-1"
                 >
-                  Delete
+                  <Trash2 size={12} />
+                  <span className="hidden sm:inline">Delete</span>
                 </button>
               </div>
-            </li>
+            </div>
           ))}
-        </ul>
+        </div>
       )}
     </div>
   );
