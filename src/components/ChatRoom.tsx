@@ -17,10 +17,13 @@ import InfiniteScroll from "react-infinite-scroll-component";
 import { ChatContext } from "../services/ChatContext";
 import { toast } from "react-toastify";
 import { EllipsisVertical } from "lucide-react";
-let typingTimeout: any;
-import { Menu } from "@headlessui/react";
+import { Menu, MenuButton, MenuItem, MenuItems } from "@headlessui/react";
 import GroupActions from "./dependencies/GroupActions";
 import Swal from "sweetalert2";
+
+
+
+let typingTimeout: any;
 
 function ChatRoom() {
   const context = useContext(ChatContext);
@@ -295,45 +298,48 @@ function ChatRoom() {
 
     return (
       <Menu as="div" className="relative inline-block text-left">
-        <Menu.Button className="text-gray-400 hover:text-white transition-colors p-1">
-          <EllipsisVertical size={15} />
-        </Menu.Button>
-        <Menu.Items className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-gray-800 shadow-lg ring-1 ring-gray-700 ring-opacity-5 focus:outline-none">
-          <div className="py-1 text-sm text-gray-300">
-            {/* Only show Assign Admin option if user is not already an admin */}
-            {!user.is_admin && (
-              <Menu.Item>
-                {({ active }) => (
-                  <button
-                    onClick={handleAddAdmin}
-                    className={`${
-                      active ? "bg-gray-700" : ""
-                    } block w-full px-4 py-2 text-left flex items-center`}
-                  >
-                    <FaCrown className="text-yellow-400 mr-2 w-3 h-3" />
-                    Assign Admin
-                  </button>
-                )}
-              </Menu.Item>
-            )}
-            <Menu.Item>
-              {({ active }) => (
+      <MenuButton className="text-gray-400 hover:text-white transition-colors p-1">
+        <EllipsisVertical size={15} />
+      </MenuButton>
+
+      <MenuItems className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-gray-800 shadow-lg ring-1 ring-gray-700 ring-opacity-5 focus:outline-none">
+        <div className="py-1 text-sm text-gray-300">
+          {!user.is_admin && (
+            <MenuItem>
+              {({ focus }) => (
                 <button
-                  onClick={handleRemove}
+                  type="button"
+                  onClick={handleAddAdmin}
                   className={`${
-                    active ? "bg-gray-700" : ""
-                  } block w-full px-4 py-2 text-left flex items-center text-red-400`}
+                    focus ? "bg-gray-700" : ""
+                  } w-full px-4 py-2 text-left flex items-center`}
                 >
-                  <FaUserMinus className="mr-2 w-3 h-3" />
-                  Remove Member
+                  <FaCrown className="text-yellow-400 mr-2 w-3 h-3" />
+                  Assign Admin
                 </button>
               )}
-            </Menu.Item>
-          </div>
-        </Menu.Items>
-      </Menu>
-    );
-  };
+            </MenuItem>
+          )}
+
+          <MenuItem>
+            {({ focus }) => (
+              <button
+                type="button"
+                onClick={handleRemove}
+                className={`${
+                  focus ? "bg-gray-700" : ""
+                } w-full px-4 py-2 text-left flex items-center text-red-400`}
+              >
+                <FaUserMinus className="mr-2 w-3 h-3" />
+                Remove Member
+              </button>
+            )}
+          </MenuItem>
+        </div>
+      </MenuItems>
+    </Menu>
+  )
+}
 
   // Reset and refresh data when changing chat rooms
   useEffect(() => {

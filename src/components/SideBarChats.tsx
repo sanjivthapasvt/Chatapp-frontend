@@ -20,7 +20,13 @@ import {
   ArrowLeft,
   Bell,
 } from "lucide-react";
-import { Listbox, Transition } from "@headlessui/react";
+import {
+  Listbox,
+  ListboxButton,
+  ListboxOption,
+  ListboxOptions,
+  Transition,
+} from "@headlessui/react";
 import axiosInstance from "../services/AxiosInstance";
 import { handleLogout } from "../services/AuthService";
 import { ChatContext } from "../services/ChatContext";
@@ -455,7 +461,7 @@ function Chats() {
                   value={friends.filter((f) =>
                     formData.participant_ids.includes(f.id)
                   )}
-                  onChange={(selectedFriends: User[]) => {
+                  onChange={(selectedFriends) => {
                     // sync back to formData
                     setFormData((fd) => ({
                       ...fd,
@@ -464,7 +470,7 @@ function Chats() {
                   }}
                 >
                   <div className="relative">
-                    <Listbox.Button className="w-full p-2 bg-slate-700 border border-slate-600 rounded text-left flex justify-between items-center">
+                    <ListboxButton className="w-full p-2 bg-slate-700 border border-slate-600 rounded text-left flex justify-between items-center">
                       <span className="truncate text-white text-sm">
                         {formData.participant_ids.length > 0
                           ? friends
@@ -476,7 +482,7 @@ function Chats() {
                           : "Select friends…"}
                       </span>
                       <ChevronsUpDown className="w-5 h-5 text-slate-400" />
-                    </Listbox.Button>
+                    </ListboxButton>
 
                     <Transition
                       as={Fragment}
@@ -484,13 +490,13 @@ function Chats() {
                       leaveFrom="opacity-100"
                       leaveTo="opacity-0"
                     >
-                      <Listbox.Options className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded bg-slate-700 py-1 text-sm shadow-lg ring-1 ring-black ring-opacity-20 focus:outline-none">
+                      <ListboxOptions className="absolute z-50 mt-1 max-h-60 w-full overflow-auto rounded bg-slate-700 py-1 text-sm shadow-lg ring-1 ring-black ring-opacity-20 focus:outline-none">
                         {friends.map((friend) => (
-                          <Listbox.Option
+                          <ListboxOption
                             key={friend.id}
-                            className={({ active }) =>
+                            className={({ focus }) =>
                               `cursor-pointer select-none py-2 px-3 flex justify-between ${
-                                active ? "bg-slate-600" : ""
+                                focus ? "bg-slate-600" : ""
                               }`
                             }
                             value={friend}
@@ -507,14 +513,13 @@ function Chats() {
                                 )}
                               </>
                             )}
-                          </Listbox.Option>
+                          </ListboxOption>
                         ))}
-                      </Listbox.Options>
+                      </ListboxOptions>
                     </Transition>
                   </div>
                 </Listbox>
               </div>
-
               {/* Group Image Field */}
               <div>
                 <label className="text-sm text-slate-300 mb-2 flex items-center justify-between">

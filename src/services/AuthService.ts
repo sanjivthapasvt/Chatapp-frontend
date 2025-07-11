@@ -11,7 +11,7 @@ export const handleLogout = async (
     const token = localStorage.getItem("token");
     if (token) {
       await axios.post(
-        `${baseUrl}/logout`,
+        `${baseUrl}/logout/`,
         { refresh_token: localStorage.getItem("refresh_token") },
         {
           headers: {
