@@ -410,18 +410,6 @@ function Chats() {
             <img src={logo} height={25} width={25} />
             <h1 className="font-semibold text-lg tracking-tight">SvT Chat</h1>
           </div>
-          <div className="flex items-center">
-            <div className="flex items-center">
-              <span
-                className={`w-2 h-2 rounded-full mr-1 ${
-                  userInfo?.online_status ? "bg-green-400" : "bg-red-400"
-                }`}
-              ></span>
-              <span className="text-xs text-slate-400">
-                {userInfo?.online_status ? "Connected" : "Offline"}
-              </span>
-            </div>
-          </div>
         </div>
 
         {/* Create Chat Form */}
